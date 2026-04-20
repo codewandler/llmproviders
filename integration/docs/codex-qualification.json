@@ -1,0 +1,40 @@
+[
+  {
+    "provider": "codex",
+    "service": "responses",
+    "model": "gpt-5.4-mini",
+    "status": "experimental",
+    "dimensions": {
+      "tools": true,
+      "caching": false,
+      "pricing": true,
+      "thinking": true,
+      "conversation": true,
+      "coding_loop": true,
+      "usage": true
+    },
+    "notes": [
+      "responses-based codex runtime scaffold implemented",
+      "prompt caching not yet qualified / not declared supported"
+    ]
+  },
+  {
+    "provider": "codex",
+    "service": "responses",
+    "model": "gpt-5.4",
+    "status": "experimental",
+    "dimensions": {
+      "tools": true,
+      "caching": false,
+      "pricing": true,
+      "thinking": true,
+      "conversation": true,
+      "coding_loop": true,
+      "usage": true
+    },
+    "notes": [
+      "responses-based codex runtime scaffold implemented",
+      "prompt caching not yet qualified / not declared supported"
+    ]
+  }
+]
