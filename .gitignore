@@ -1,2 +1,4 @@
 .idea
 *.iml
+integration.test
+.agents/plans

@@ -1,0 +1,218 @@
+package anthropic
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
+	"time"
+)
+
+const (
+	// defaultClaudeDirName is the default directory name for Claude config.
+	defaultClaudeDirName = ".claude"
+
+	// credentialsFileName is the name of the credentials file.
+	credentialsFileName = ".credentials.json"
+
+	// localTokenKey is the key used for the single token in local storage.
+	localTokenKey = "default"
+)
+
+// localCredentials matches the ~/.claude/.credentials.json format.
+type localCredentials struct {
+	ClaudeAiOauth *localOAuthData `json:"claudeAiOauth"`
+}
+
+type localOAuthData struct {
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
+	ExpiresAt    int64  `json:"expiresAt"` // Unix timestamp in milliseconds
+}
+
+// LocalTokenStore implements TokenStore for the local Claude Code credentials file.
+// It reads and writes tokens to ~/.claude/.credentials.json.
+type LocalTokenStore struct {
+	path string
+}
+
+// DefaultClaudeDir returns the Claude config directory.
+// Checks CLAUDE_CONFIG_DIR env var first, falls back to ~/.claude.
+func DefaultClaudeDir() (string, error) {
+	if dir := os.Getenv("CLAUDE_CONFIG_DIR"); dir != "" {
+		return dir, nil
+	}
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", fmt.Errorf("get home directory: %w", err)
+	}
+	return filepath.Join(home, defaultClaudeDirName), nil
+}
+
+// NewLocalTokenStore creates a TokenStore that uses ~/.claude/.credentials.json.
+func NewLocalTokenStore() (*LocalTokenStore, error) {
+	path, err := defaultLocalCredentialsPath()
+	if err != nil {
+		return nil, err
+	}
+	return NewLocalTokenStoreWithPath(path)
+}
+
+// NewLocalTokenStoreWithPath creates a LocalTokenStore with a custom credentials file path.
+func NewLocalTokenStoreWithPath(path string) (*LocalTokenStore, error) {
+	if _, err := os.Stat(path); err != nil {
+		return nil, fmt.Errorf("claude credentials not found at %s: %w", path, err)
+	}
+	return &LocalTokenStore{path: path}, nil
+}
+
+// NewLocalTokenStoreWithDir creates a LocalTokenStore using the specified directory.
+// The directory should contain .credentials.json file.
+func NewLocalTokenStoreWithDir(dir string) (*LocalTokenStore, error) {
+	path := filepath.Join(dir, credentialsFileName)
+	return NewLocalTokenStoreWithPath(path)
+}
+
+// LocalTokenStoreAvailable returns true if local Claude credentials exist.
+// Uses CLAUDE_CONFIG_DIR env var if set, otherwise ~/.claude.
+func LocalTokenStoreAvailable() bool {
+	dir, err := DefaultClaudeDir()
+	if err != nil {
+		return false
+	}
+	return LocalTokenStoreAvailableInDir(dir)
+}
+
+// LocalTokenStoreAvailableInDir checks if credentials exist in the specified directory.
+func LocalTokenStoreAvailableInDir(dir string) bool {
+	path := filepath.Join(dir, credentialsFileName)
+	_, err := os.Stat(path)
+	return err == nil
+}
+
+// defaultLocalCredentialsPath returns the full path to the credentials file.
+// Uses CLAUDE_CONFIG_DIR env var if set, otherwise ~/.claude/.credentials.json.
+func defaultLocalCredentialsPath() (string, error) {
+	dir, err := DefaultClaudeDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(dir, credentialsFileName), nil
+}
+
+// --- TokenStore implementation ---
+
+// Load retrieves the token from the credentials file.
+// The key parameter is ignored since the file contains only one token.
+func (s *LocalTokenStore) Load(ctx context.Context, key string) (*Token, error) {
+	data, err := os.ReadFile(s.path)
+	if err != nil {
+		return nil, fmt.Errorf("read credentials file: %w", err)
+	}
+
+	var creds localCredentials
+	if err := json.Unmarshal(data, &creds); err != nil {
+		return nil, fmt.Errorf("parse credentials file: %w", err)
+	}
+
+	if creds.ClaudeAiOauth == nil {
+		return nil, nil // No token found
+	}
+
+	oauth := creds.ClaudeAiOauth
+	if oauth.AccessToken == "" {
+		return nil, nil // No valid token
+	}
+
+	return &Token{
+		AccessToken:  oauth.AccessToken,
+		RefreshToken: oauth.RefreshToken,
+		ExpiresAt:    time.UnixMilli(oauth.ExpiresAt),
+	}, nil
+}
+
+// Save persists the token to the credentials file.
+// The key parameter is ignored since the file contains only one token.
+//
+// This method preserves all unknown fields in the JSON file to maintain
+// compatibility with Claude Code and other tools that may store additional data.
+// It uses atomic writes (temp file + rename) to prevent corruption.
+func (s *LocalTokenStore) Save(ctx context.Context, key string, token *Token) error {
+	// Read existing file to preserve ALL fields (not just the ones we know about)
+	data, err := os.ReadFile(s.path)
+	if err != nil {
+		return fmt.Errorf("read credentials file: %w", err)
+	}
+
+	// Parse into generic map to preserve unknown top-level fields
+	var root map[string]json.RawMessage
+	if err := json.Unmarshal(data, &root); err != nil {
+		return fmt.Errorf("parse credentials file: %w", err)
+	}
+	if root == nil {
+		root = make(map[string]json.RawMessage)
+	}
+
+	// Parse claudeAiOauth as map to preserve unknown fields within it
+	var oauth map[string]any
+	if raw, ok := root["claudeAiOauth"]; ok {
+		if err := json.Unmarshal(raw, &oauth); err != nil {
+			oauth = make(map[string]any)
+		}
+	}
+	if oauth == nil {
+		oauth = make(map[string]any)
+	}
+
+	// Update only the token fields we manage
+	oauth["accessToken"] = token.AccessToken
+	oauth["refreshToken"] = token.RefreshToken
+	oauth["expiresAt"] = token.ExpiresAt.UnixMilli()
+
+	// Marshal oauth back into root
+	oauthBytes, err := json.Marshal(oauth)
+	if err != nil {
+		return fmt.Errorf("marshal oauth: %w", err)
+	}
+	root["claudeAiOauth"] = oauthBytes
+
+	// Marshal entire document
+	newData, err := json.Marshal(root)
+	if err != nil {
+		return fmt.Errorf("marshal credentials: %w", err)
+	}
+
+	// Atomic write: temp file + rename
+	tmpPath := s.path + ".tmp"
+	if err := os.WriteFile(tmpPath, newData, 0600); err != nil {
+		return fmt.Errorf("write temp credentials file: %w", err)
+	}
+	if err := os.Rename(tmpPath, s.path); err != nil {
+		_ = os.Remove(tmpPath) // cleanup on failure; ignore error
+		return fmt.Errorf("rename credentials file: %w", err)
+	}
+
+	return nil
+}
+
+// Delete is a no-op for local storage (we don't delete the Claude credentials file).
+func (s *LocalTokenStore) Delete(ctx context.Context, key string) error {
+	return nil
+}
+
+// List returns the single key used for local storage.
+func (s *LocalTokenStore) List(ctx context.Context) ([]string, error) {
+	// Check if token exists
+	token, err := s.Load(ctx, localTokenKey)
+	if err != nil {
+		return nil, err
+	}
+	if token == nil {
+		return []string{}, nil
+	}
+	return []string{localTokenKey}, nil
+}
+
+// Ensure LocalTokenStore implements TokenStore.
+var _ TokenStore = (*LocalTokenStore)(nil)

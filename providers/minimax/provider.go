@@ -1,7 +1,8 @@
-package anthropic
+package minimax
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
 	messagesapi "github.com/codewandler/agentapis/api/messages"
@@ -10,51 +11,27 @@ import (
 	"github.com/codewandler/agentapis/conversation"
 )
 
-// Provider implements the Anthropic Messages API provider.
+// Provider implements the MiniMax Messages API provider.
+// MiniMax provides an Anthropic Messages API-compatible endpoint.
 type Provider struct {
 	cfg            Config
 	auth           Auth
 	models         Models
 	messagesClient *client.MessagesClient
-	claudeHeaders  bool
-
-	// Behavior options
-	autoSystemCacheControl bool
-	autoSystemCacheTTL     string
 }
 
-// New creates a new Anthropic provider.
-// By default, it uses the ANTHROPIC_API_KEY environment variable for authentication.
+// New creates a new MiniMax provider.
+// By default, it uses the MINIMAX_API_KEY environment variable for authentication.
 func New(opts ...Option) (*Provider, error) {
 	o := applyOptions(opts)
 
 	// Resolve auth
 	auth := o.auth
-	switch auth.(type) {
-	case nil:
-		// No auth specified - use API key from environment
+	if auth == nil {
 		var err error
 		auth, err = NewAPIKeyAuthFromEnv()
 		if err != nil {
 			return nil, err
-		}
-	case localOAuthMarker:
-		// WithLocalOAuth() was called - explicitly create local OAuth auth
-		var err error
-		if o.claudeHeaders {
-			auth, err = NewLocalOAuthAuthWithClaudeHeaders()
-		} else {
-			auth, err = NewLocalOAuthAuth()
-		}
-		if err != nil {
-			return nil, err // No implicit fallback - fail if OAuth not available
-		}
-	}
-
-	// Apply Claude headers to OAuth auth if requested
-	if o.claudeHeaders {
-		if oauthAuth, ok := auth.(*OAuthAuth); ok {
-			oauthAuth.ClaudeHeaders = true
 		}
 	}
 
@@ -65,8 +42,8 @@ func New(opts ...Option) (*Provider, error) {
 		HTTPClient: o.httpClient,
 	}
 
-	// Build protocol options
-	protocolOpts := []messagesapi.Option{
+	// Create the low-level messages API client
+	protocol := messagesapi.NewClient(
 		messagesapi.WithBaseURL(cfg.baseURL()),
 		messagesapi.WithHTTPClient(cfg.httpClient()),
 		messagesapi.WithHeaderFunc(func(ctx context.Context, req *messagesapi.Request) (http.Header, error) {
@@ -77,50 +54,29 @@ func New(opts ...Option) (*Provider, error) {
 			return h, nil
 		}),
 		messagesapi.WithHTTPRequestMutator(func(ctx context.Context, httpReq *http.Request, req *messagesapi.Request) error {
-			// Set required Anthropic headers
+			// Set required Anthropic-compatible headers
 			httpReq.Header.Set("Content-Type", "application/json")
 			httpReq.Header.Set("Anthropic-Version", AnthropicVersion)
 			httpReq.Header.Set("Anthropic-Beta", BetaInterleavedThinking)
 			return nil
 		}),
 		messagesapi.WithRequestTransform(func(ctx context.Context, req *messagesapi.Request) error {
-			// Apply thinking temperature coercion
-			CoerceThinkingTemperature(req)
+			// MiniMax requires a model to be specified
+			if req.Model == "" {
+				return errors.New("minimax: model is required")
+			}
 			return nil
 		}),
-	}
-
-	// Add auto system cache control transform if enabled
-	if o.autoSystemCacheControl {
-		protocolOpts = append(protocolOpts, messagesapi.WithRequestTransform(
-			messagesapi.AutoSystemCacheControlWithTTL(o.autoSystemCacheTTL),
-		))
-	}
-
-	// Add rate limit callback if provided
-	if o.rateLimitCallback != nil {
-		protocolOpts = append(protocolOpts, messagesapi.WithResponseHook(
-			func(_ context.Context, meta messagesapi.ResponseMeta) {
-				rl := messagesapi.ParseRateLimits(meta.Headers)
-				o.rateLimitCallback(rl)
-			},
-		))
-	}
-
-	// Create the low-level messages API client
-	protocol := messagesapi.NewClient(protocolOpts...)
+	)
 
 	// Create the high-level unified client
 	messagesClient := client.NewMessagesClient(protocol)
 
 	p := &Provider{
-		cfg:                    cfg,
-		auth:                   auth,
-		models:                 LoadModels(),
-		messagesClient:         messagesClient,
-		claudeHeaders:          o.claudeHeaders,
-		autoSystemCacheControl: o.autoSystemCacheControl,
-		autoSystemCacheTTL:     o.autoSystemCacheTTL,
+		cfg:            cfg,
+		auth:           auth,
+		models:         LoadModels(),
+		messagesClient: messagesClient,
 	}
 
 	return p, nil
@@ -139,7 +95,7 @@ func (p *Provider) Models() Models {
 // Capabilities returns the provider capabilities.
 func (p *Provider) Capabilities() Capabilities {
 	return Capabilities{
-		SupportsResponsesPreviousResponseID: false, // Anthropic uses replay strategy
+		SupportsResponsesPreviousResponseID: false, // MiniMax uses replay strategy
 	}
 }
 
@@ -147,7 +103,7 @@ func (p *Provider) Capabilities() Capabilities {
 type Capabilities struct {
 	// SupportsResponsesPreviousResponseID indicates if the provider supports
 	// the Responses API previous_response_id for conversation continuity.
-	// Anthropic does not; it uses message replay.
+	// MiniMax does not; it uses message replay.
 	SupportsResponsesPreviousResponseID bool
 }
 
