@@ -36,8 +36,8 @@ const (
 	DefaultEngine = "llama.cpp"
 
 	// DefaultModel is the default model to use.
-	// ai/smollm2 is small (360M params) and works on low-memory machines.
-	DefaultModel = "ai/smollm2"
+	// ai/llama3.2 is small (3B params) but capable enough for basic chat.
+	DefaultModel = "ai/llama3.2"
 )
 
 // Model ID constants for Docker Hub's ai/ namespace models.

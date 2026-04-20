@@ -30,8 +30,8 @@ const (
 	DefaultBaseURL = "http://localhost:11434"
 
 	// DefaultModel is the default model to use.
-	// qwen2.5:0.5b is small (0.5B params) and fast, suitable for testing.
-	DefaultModel = "qwen2.5:0.5b"
+	// llama3.2:1b is small (1B params) but capable enough for basic chat.
+	DefaultModel = "llama3.2:1b"
 )
 
 // Model ID constants for commonly used Ollama models.
