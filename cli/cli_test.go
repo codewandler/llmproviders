@@ -332,9 +332,27 @@ func TestNewLLMCommand(t *testing.T) {
 	if cmd.Use != "llm" {
 		t.Fatalf("Use = %q, want llm", cmd.Use)
 	}
-	for _, sub := range []string{"infer", "models", "intents", "providers", "aliases", "resolve", "skill"} {
+	for _, sub := range []string{"infer", "serve", "opencode", "models", "intents", "providers", "aliases", "resolve", "skill"} {
 		if _, _, err := cmd.Find([]string{sub}); err != nil {
 			t.Fatalf("expected subcommand %q: %v", sub, err)
+		}
+	}
+}
+
+func TestResolveAddr(t *testing.T) {
+	tests := []struct {
+		input string
+		want  string
+	}{
+		{":8080", "localhost:8080"},
+		{"0.0.0.0:3000", "0.0.0.0:3000"},
+		{"localhost:9090", "localhost:9090"},
+		{"invalid", "invalid"},
+	}
+	for _, tt := range tests {
+		got := resolveAddr(tt.input)
+		if got != tt.want {
+			t.Errorf("resolveAddr(%q) = %q, want %q", tt.input, got, tt.want)
 		}
 	}
 }

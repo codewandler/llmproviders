@@ -1,0 +1,12 @@
+version: '3'
+
+tasks:
+  install:
+    desc: Install the llmcli binary
+    cmds:
+      - go install ./cmd/llmcli
+
+  serve:
+    desc: Start the llmcli serve command with debug logging
+    cmds:
+      - go run ./cmd/llmcli serve --log-file serve.log --log-level debug

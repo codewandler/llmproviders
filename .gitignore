@@ -2,3 +2,5 @@
 *.iml
 integration.test
 .agents/plans
+*.log
+llmcli

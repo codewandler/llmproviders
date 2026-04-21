@@ -61,8 +61,9 @@ func New(opts ...Option) (*Provider, error) {
 		}),
 		responsesapi.WithRequestTransform(func(ctx context.Context, req *responsesapi.Request) error {
 			// Set reasoning summary to auto if reasoning is configured
-			if req.Reasoning != nil && req.Reasoning.Summary == "" {
-				req.Reasoning.Summary = "auto"
+			if req.Reasoning != nil && req.Reasoning.Summary == nil {
+				s := responsesapi.ReasoningSummaryAuto
+				req.Reasoning.Summary = &s
 			}
 			return nil
 		}),

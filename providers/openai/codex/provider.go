@@ -86,13 +86,20 @@ func New(opts ...Option) (*Provider, error) {
 		responsesapi.WithRequestTransform(func(ctx context.Context, req *responsesapi.Request) error {
 			// Map effort: EffortMax -> xhigh
 			if req.Reasoning != nil {
-				if req.Reasoning.Effort == "max" {
-					req.Reasoning.Effort = EffortXHigh
+				if req.Reasoning.Effort != nil && *req.Reasoning.Effort == "max" {
+					e := responsesapi.ReasoningEffort(EffortXHigh)
+					req.Reasoning.Effort = &e
 				}
 				// Codex backend requires explicit summary to stream reasoning text
-				if req.Reasoning.Summary == "" {
-					req.Reasoning.Summary = "auto"
+				if req.Reasoning.Summary == nil {
+					s := responsesapi.ReasoningSummaryAuto
+					req.Reasoning.Summary = &s
 				}
+			}
+			// Codex backend requires instructions even when the caller did not send one.
+			if req.Instructions == nil || *req.Instructions == "" {
+				defInstr := "You are a helpful assistant."
+				req.Instructions = &defInstr
 			}
 			return nil
 		}),
@@ -112,28 +119,6 @@ func New(opts ...Option) (*Provider, error) {
 			if req.Thinking.IsOn() && req.Effort.IsEmpty() {
 				req.Effort = unified.EffortHigh
 			}
-
-			// Codex API requires instructions (system message)
-			// Add a default if none is present
-			hasSystem := false
-			for _, msg := range req.Messages {
-				if msg.Role == unified.RoleSystem {
-					hasSystem = true
-					break
-				}
-			}
-			if !hasSystem {
-				// Prepend a default system message
-				systemMsg := unified.Message{
-					Role: unified.RoleSystem,
-					Parts: []unified.Part{{
-						Type: unified.PartTypeText,
-						Text: "You are a helpful assistant.",
-					}},
-				}
-				req.Messages = append([]unified.Message{systemMsg}, req.Messages...)
-			}
-
 			return nil
 		}),
 	}

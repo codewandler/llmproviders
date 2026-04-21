@@ -129,12 +129,14 @@ func WithClaudeHeaders(enabled bool) Option {
 }
 
 // WithClaudeCode configures the provider to behave like Claude Code using local
-// Claude OAuth credentials, Claude-compatible headers, and the "claude" instance name.
+// Claude OAuth credentials, Claude-compatible headers, prompt caching, and the
+// "claude" instance name.
 func WithClaudeCode() Option {
 	return func(o *providerOptions) {
 		WithLocalOAuth()(o)
 		WithClaudeHeaders(true)(o)
 		WithName("claude")(o)
+		WithAutoSystemCacheControl("")(o) // enable prompt caching with default TTL
 	}
 }
 

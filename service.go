@@ -628,3 +628,8 @@ func (s *Service) modelsForService(serviceID string) []string {
 	sort.Strings(models)
 	return models
 }
+
+// Catalog returns the modeldb catalog used by this service.
+func (s *Service) Catalog() modeldb.Catalog {
+	return s.catalog
+}

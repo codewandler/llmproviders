@@ -71,9 +71,13 @@ func main() {
 | Provider | Package | Env Variable | API |
 |----------|---------|--------------|-----|
 | Anthropic | `providers/anthropic` | `ANTHROPIC_API_KEY` | Messages API |
+| Claude (OAuth) | `providers/anthropic` | Claude CLI credentials | Messages API |
 | OpenAI | `providers/openai` | `OPENAI_API_KEY` | Responses API |
+| Codex | `providers/openai/codex` | ChatGPT OAuth credentials | Responses API |
 | MiniMax | `providers/minimax` | `MINIMAX_API_KEY` | Messages API (Anthropic-compatible) |
 | OpenRouter | `providers/openrouter` | `OPENROUTER_API_KEY` | Auto-routes based on model |
+| Ollama | `providers/ollama` | `OLLAMA_URL` | Ollama API |
+| Docker Model Runner | `providers/dockermr` | `DOCKER_MODEL_RUNNER_URL` | OpenAI-compatible |
 
 ## Provider-Specific Features
 
@@ -111,6 +115,32 @@ session := p.Session(conversation.WithModel("anthropic/claude-sonnet-4-6"))
 
 // Other models use Responses API
 session := p.Session(conversation.WithModel("openai/gpt-5.4"))
+```
+
+## Proxy Server
+
+Start an OpenAI-compatible Responses API proxy that routes through any detected provider:
+
+```bash
+# Start the server
+llmcli serve
+
+# Custom port with CORS
+llmcli serve --addr :3000 --cors
+
+# Test with curl
+curl -N http://localhost:8080/v1/responses \
+  -H "Content-Type: application/json" \
+  -d '{"model":"sonnet","input":[{"role":"user","content":"Hello"}],"stream":true}'
+```
+
+Works with OpenAI SDKs:
+
+```python
+from openai import OpenAI
+client = OpenAI(base_url="http://localhost:8080/v1", api_key="unused")
+for event in client.responses.create(model="sonnet", input="Hello", stream=True):
+    print(event)
 ```
 
 ## Tool Calling
@@ -153,12 +183,19 @@ for ev := range events {
 
 ```
 llmproviders/
+├── cli/               # CLI commands (infer, serve, models, etc.)
+├── cmd/llmcli/        # Standalone CLI binary
+├── internal/serve/    # OpenAI-compatible Responses API server
 ├── providers/
-│   ├── anthropic/    # Anthropic Claude models
-│   ├── openai/       # OpenAI GPT models
-│   ├── minimax/      # MiniMax models
-│   └── openrouter/   # OpenRouter gateway
-└── integration/      # Integration tests
+│   ├── anthropic/     # Anthropic Claude models
+│   ├── openai/        # OpenAI GPT models
+│   │   └── codex/     # Codex CLI backend
+│   ├── minimax/       # MiniMax models
+│   ├── openrouter/    # OpenRouter gateway
+│   ├── ollama/        # Ollama local models
+│   └── dockermr/      # Docker Model Runner
+├── registry/          # Provider registration and auto-detection
+└── integration/       # Integration tests
 ```
 
 This library builds on [agentapis](https://github.com/codewandler/agentapis) which provides:

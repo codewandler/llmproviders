@@ -5,6 +5,45 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-04-22
+
+### Added
+
+- **`serve` command** — OpenAI-compatible Responses API proxy server
+  - Starts an HTTP server that proxies requests through llmproviders Service
+  - Model aliases (sonnet, fast, powerful) work transparently
+  - SSE streaming with full Responses API event protocol
+  - Synthetic event construction for non-Responses providers (Anthropic, Ollama)
+  - Raw passthrough for Responses-native providers (OpenAI, OpenRouter, Codex)
+  - CORS support via `--cors` flag
+  - Health check endpoint at `/health`
+  - Configurable listen address, endpoint path, and log level
+  - Request validation via `responses.DecodeRequest` (JSON Schema)
+  - Compatible with OpenAI Python/Node SDKs
+
+- **`internal/serve` package** — HTTP handler, SSE writer, and Responses API emitter
+  - `Handler` — resolves models, decodes & validates requests via `responses.DecodeRequest`, streams upstream, emits SSE events
+  - `Emitter` — converts unified stream events to Responses API SSE protocol
+  - `SSEWriter` — writes Server-Sent Events with proper flushing
+  - OpenAPI request/response validation middleware
+  - Handles: text, reasoning, tool calls, lifecycle events, usage, errors
+  - Comprehensive test coverage (86%)
+
+- **`opencode` command** — manage OpenCode MCP server integration
+
+- **`Service.Catalog()`** — accessor for the modeldb catalog used by the service
+
+- **Serve integration tests** (`integration/serve_smoke_test.go`) — table-driven tests exercising both passthrough (OpenRouter) and translated (Claude OAuth) code paths via the `responses.Client` from agentapis
+
+- **Anthropic caching integration test** (`integration/claude_smoke_test.go`) — validates prompt caching across 3 turns with cache write/read assertions
+
+### Changed
+
+- **Upgraded to agentapis v0.13.0** — adapts to `responses.Request` pointer-type fields, typed enums (`*ReasoningEffort`, `*ReasoningSummary`), `InputParam`/`ToolParam`/`ToolChoiceParam` union wrappers, and `responses.DecodeRequest` for schema-validated decoding
+- **`WithClaudeCode()` now enables prompt caching** by default via `WithAutoSystemCacheControl("")`
+- **Codex provider**: consolidated default-instructions logic into the Responses-level `WithRequestTransform` hook; removed redundant unified-level system message injection
+- **SIGTERM** added to CLI signal handler alongside SIGINT
+
 ## [0.5.5] - 2026-04-21
 
 ### Changed

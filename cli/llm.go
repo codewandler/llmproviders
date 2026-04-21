@@ -39,6 +39,8 @@ func NewLLMCommand(opts LLMCommandOptions) *cobra.Command {
 
 Commands:
   infer      Send a message to an LLM and stream the response
+  serve      Start an OpenAI-compatible Responses API proxy server
+  opencode   Manage OpenCode integration
   models     List available models from detected providers
   intents    Show intent alias resolution (fast, default, powerful)
   providers  List registered providers and their detection status
@@ -48,6 +50,14 @@ Commands:
 	}
 
 	// Add subcommands
+	cmd.AddCommand(NewServeCommand(ServeCommandOptions{
+		IO:          opts.IO,
+		LoadService: opts.LoadService,
+	}))
+	cmd.AddCommand(NewOpencodeCommand(OpencodeCommandOptions{
+		IO:          opts.IO,
+		LoadService: opts.LoadService,
+	}))
 	cmd.AddCommand(NewInferCommand(InferCommandOptions{
 		IO:          opts.IO,
 		LoadService: opts.LoadService,
