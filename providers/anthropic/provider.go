@@ -66,6 +66,9 @@ func New(opts ...Option) (*Provider, error) {
 	}
 
 	// Build protocol options
+	// Capture claudeHeaders for use in closures
+	claudeHeaders := o.claudeHeaders
+
 	protocolOpts := []messagesapi.Option{
 		messagesapi.WithBaseURL(cfg.baseURL()),
 		messagesapi.WithHTTPClient(cfg.httpClient()),
@@ -80,7 +83,20 @@ func New(opts ...Option) (*Provider, error) {
 			// Set required Anthropic headers
 			httpReq.Header.Set("Content-Type", "application/json")
 			httpReq.Header.Set("Anthropic-Version", AnthropicVersion)
-			httpReq.Header.Set("Anthropic-Beta", BetaInterleavedThinking)
+
+			// Only set Anthropic-Beta if NOT using Claude headers.
+			// Claude headers (set in oauth_auth.go) include the full beta string
+			// with oauth-2025-04-20 which is required for OAuth authentication.
+			if !claudeHeaders {
+				httpReq.Header.Set("Anthropic-Beta", BetaInterleavedThinking)
+			}
+
+			// Add ?beta=true query parameter for Claude OAuth compatibility
+			if claudeHeaders {
+				q := httpReq.URL.Query()
+				q.Set("beta", "true")
+				httpReq.URL.RawQuery = q.Encode()
+			}
 			return nil
 		}),
 		messagesapi.WithRequestTransform(func(ctx context.Context, req *messagesapi.Request) error {

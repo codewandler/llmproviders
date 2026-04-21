@@ -28,8 +28,9 @@ type ResolvedRef struct {
 
 // AliasTarget represents the target of a provider alias.
 type AliasTarget struct {
-	ServiceID   string
-	WireModelID string
+	InstanceName string // The instance that registered this alias
+	ServiceID    string
+	WireModelID  string
 }
 
 // providerInstance holds a registered provider and its metadata.
@@ -193,8 +194,9 @@ func (s *Service) mergeAliases() {
 		for alias, wireModel := range inst.Aliases {
 			if _, exists := s.providerAliases[alias]; !exists {
 				s.providerAliases[alias] = AliasTarget{
-					ServiceID:   inst.ServiceID,
-					WireModelID: wireModel,
+					InstanceName: inst.InstanceName,
+					ServiceID:    inst.ServiceID,
+					WireModelID:  wireModel,
 				}
 			}
 		}
@@ -255,6 +257,11 @@ func (s *Service) ProviderFor(model string) (registry.Provider, string, error) {
 
 	// Step 2: Check provider aliases (sonnet, opus, haiku, etc.)
 	if target, ok := s.providerAliases[model]; ok {
+		// Use the specific instance that registered this alias
+		if inst, ok := s.instances[target.InstanceName]; ok {
+			return inst.Provider, target.WireModelID, nil
+		}
+		// Fallback to service lookup if instance was removed
 		return s.findProviderForService(target.ServiceID, target.WireModelID)
 	}
 

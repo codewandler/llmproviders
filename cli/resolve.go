@@ -158,16 +158,12 @@ func resolveWithDetails(svc *llmproviders.Service, modelRef string) ResolutionRe
 	step2 := ResolutionStep{Step: 2, Check: "Checked provider aliases"}
 	if target, ok := providerAliases[modelRef]; ok {
 		step2.Matched = true
-		step2.Detail = fmt.Sprintf("found in %s", target.ServiceID)
+		step2.Detail = fmt.Sprintf("found in %s", target.InstanceName)
 		result.Steps = append(result.Steps, step2)
 		result.Type = "provider_alias"
-		result.WireModelID = target.WireModelID
+		result.ProviderName = target.InstanceName
 		result.ServiceID = target.ServiceID
-		// Get provider name by resolving through service
-		if p, m, err := svc.ProviderFor(modelRef); err == nil {
-			result.ProviderName = p.Name()
-			result.WireModelID = m
-		}
+		result.WireModelID = target.WireModelID
 		return result
 	}
 	result.Steps = append(result.Steps, step2)

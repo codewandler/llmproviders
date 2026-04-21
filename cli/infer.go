@@ -101,9 +101,17 @@ func runInfer(ctx context.Context, opts InferCommandOptions, ioCfg IO, params in
 	}
 
 	if params.verbose {
+		// Determine instance name for display
+		instanceName := provider.Name() // Default to provider name
+		if target, ok := svc.ProviderAliases()[params.model]; ok {
+			instanceName = target.InstanceName
+		} else if ref, ok := svc.IntentAliases()[params.model]; ok {
+			instanceName = ref.InstanceName
+		}
+
 		fmt.Fprintf(errOut, "%s── model resolved ──%s\n", ansiDim, ansiReset)
 		fmt.Fprintf(errOut, "  input: %s\n", params.model)
-		fmt.Fprintf(errOut, "  provider: %s\n", provider.Name())
+		fmt.Fprintf(errOut, "  provider: %s\n", instanceName)
 		fmt.Fprintf(errOut, "  wire_model: %s\n", wireModel)
 		fmt.Fprintln(errOut)
 	}
