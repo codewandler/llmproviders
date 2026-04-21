@@ -28,7 +28,7 @@ func TestOpenAIBasicStream(t *testing.T) {
 	}
 
 	// Create session with default model
-	session := p.Session()
+	session := p.CreateSession()
 
 	// Send simple request
 	events, err := session.Request(ctx, conversation.Request{
@@ -83,12 +83,13 @@ func TestOpenAIModelResolution(t *testing.T) {
 		t.Fatalf("openai.New() error = %v", err)
 	}
 
-	// Test with various aliases
-	aliases := []string{"openai", "default", "mini", "nano"}
+	// Test with provider-level aliases only (intent aliases like "openai", "default"
+	// are resolved at the Service level, not here)
+	aliases := []string{"mini", "nano"}
 
 	for _, alias := range aliases {
 		t.Run(alias, func(t *testing.T) {
-			session := p.Session(
+			session := p.CreateSession(
 				conversation.WithModel(alias),
 			)
 
@@ -154,7 +155,7 @@ func TestOpenAIToolUse(t *testing.T) {
 	}
 
 	// Create session with tool
-	session := p.Session(
+	session := p.CreateSession(
 		conversation.WithTools([]unified.Tool{weatherTool}),
 	)
 
@@ -242,7 +243,7 @@ func TestOpenAIMultiTurn(t *testing.T) {
 		t.Fatalf("openai.New() error = %v", err)
 	}
 
-	session := p.Session()
+	session := p.CreateSession()
 
 	// Turn 1: Introduce a topic
 	t.Log("Turn 1: Setting context...")

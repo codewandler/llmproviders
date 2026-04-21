@@ -4,8 +4,11 @@ import "time"
 
 // Provider constants.
 const (
-	// ProviderName is the identifier for this provider.
+	// ProviderName is the identifier for this provider instance.
 	ProviderName = "codex"
+
+	// ServiceID is the modeldb service identifier for this provider.
+	ServiceID = "codex"
 
 	// DefaultBaseURL is the Codex backend API base URL.
 	// This is different from the standard OpenAI API - it goes through chatgpt.com.

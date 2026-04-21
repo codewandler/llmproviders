@@ -46,7 +46,7 @@ func TestAnthropicToolUse(t *testing.T) {
 
 	// Create session with tool
 	// Note: We disable thinking to avoid replay issues with thinking block signatures
-	session := p.Session(
+	session := p.CreateSession(
 		conversation.WithTools([]unified.Tool{weatherTool}),
 		conversation.WithModel(anthropic.ModelSonnet),
 		conversation.WithThinking(unified.ThinkingModeOff),
@@ -152,7 +152,7 @@ func TestAnthropicBasicStream(t *testing.T) {
 	}
 
 	// Create session
-	session := p.Session(
+	session := p.CreateSession(
 		conversation.WithModel(anthropic.ModelSonnet),
 	)
 
@@ -209,7 +209,7 @@ func TestAnthropicModelResolution(t *testing.T) {
 	}
 
 	// Test with alias "sonnet"
-	session := p.Session(
+	session := p.CreateSession(
 		conversation.WithModel("sonnet"),
 	)
 
@@ -282,7 +282,7 @@ func TestAnthropicThinkingToolUse(t *testing.T) {
 	}
 
 	// Create session WITH THINKING ENABLED - this is the key test
-	session := p.Session(
+	session := p.CreateSession(
 		conversation.WithTools([]unified.Tool{calcTool}),
 		conversation.WithModel(anthropic.ModelSonnet),
 		conversation.WithThinking(unified.ThinkingModeOn), // THINKING ENABLED

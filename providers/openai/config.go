@@ -4,8 +4,11 @@ const (
 	// DefaultBaseURL is the default OpenAI API endpoint.
 	DefaultBaseURL = "https://api.openai.com"
 
-	// ProviderName is the canonical name for this provider.
+	// ProviderName is the canonical name for this provider instance.
 	ProviderName = "openai"
+
+	// ServiceID is the modeldb service identifier for this provider.
+	ServiceID = "openai"
 
 	// DefaultModel is the default model when none is specified.
 	DefaultModel = ModelGPT54Mini

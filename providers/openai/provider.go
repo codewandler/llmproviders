@@ -140,7 +140,7 @@ func (p *Provider) Stream(ctx context.Context, req unified.Request) (<-chan clie
 }
 
 // Session creates a new conversation session backed by this provider.
-func (p *Provider) Session(opts ...conversation.Option) *conversation.Session {
+func (p *Provider) CreateSession(opts ...conversation.Option) *conversation.Session {
 	caps := p.Capabilities()
 	defaults := []conversation.Option{
 		conversation.WithModel(p.cfg.Model),

@@ -5,16 +5,15 @@ import (
 )
 
 func TestModelAliasResolution(t *testing.T) {
+	// Provider-level aliases only (intent aliases like "default", "fast" and
+	// provider name "openai" are resolved at the Service level, not here)
 	tests := []struct {
 		alias string
 		want  string
 	}{
-		{"openai", ModelGPT54Mini},
-		{"default", ModelGPT54Mini},
 		{"flagship", ModelGPT54},
 		{"mini", ModelGPT54Mini},
 		{"nano", ModelGPT54Nano},
-		{"fast", ModelGPT54Nano},
 		{"pro", ModelGPT54Pro},
 		{"codex", ModelGPT53Codex},
 		{"o3", ModelO3},
@@ -235,14 +234,16 @@ func TestProviderOptions(t *testing.T) {
 }
 
 func TestResolveModel(t *testing.T) {
+	// Provider-level resolution only (provider name "openai" is resolved at the
+	// Service level, not here)
 	tests := []struct {
 		input string
 		want  string
 	}{
 		{"", DefaultModel},
-		{"openai", ModelGPT54Mini},
-		{"OPENAI", ModelGPT54Mini},
 		{"gpt-5.4", ModelGPT54},
+		{"flagship", ModelGPT54},
+		{"mini", ModelGPT54Mini},
 		{"unknown", "unknown"},
 	}
 

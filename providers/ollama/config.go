@@ -22,7 +22,13 @@
 package ollama
 
 // Provider name constant.
-const ProviderName = "ollama"
+const (
+	// ProviderName is the identifier for this provider instance.
+	ProviderName = "ollama"
+
+	// ServiceID is the modeldb service identifier for this provider.
+	ServiceID = "ollama"
+)
 
 // Default configuration values.
 const (

@@ -280,10 +280,10 @@ func (p *Provider) Stream(ctx context.Context, req unified.Request) (<-chan clie
 	return p.responsesClient.Stream(ctx, req)
 }
 
-// Session creates a new conversation session backed by this provider.
+// CreateSession creates a new conversation session backed by this provider.
 // The conversation layer auto-generates a session ID which flows to the provider
 // via PromptCacheKey in the request, used for session_id and x-codex-window-id headers.
-func (p *Provider) Session(opts ...conversation.Option) *conversation.Session {
+func (p *Provider) CreateSession(opts ...conversation.Option) *conversation.Session {
 	caps := p.Capabilities()
 	defaults := []conversation.Option{
 		conversation.WithModel(p.cfg.Model),

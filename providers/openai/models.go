@@ -58,25 +58,31 @@ const (
 	ModelO1Pro  = "o1-pro"
 )
 
-// ModelAliases maps short alias names to full model IDs.
-var ModelAliases = map[string]string{
-	// Default and tier aliases
-	"openai":   ModelGPT54Mini,
-	"default":  ModelGPT54Mini,
-	"flagship": ModelGPT54,
-	"mini":     ModelGPT54Mini,
-	"nano":     ModelGPT54Nano,
-	"pro":      ModelGPT54Pro,
-	"fast":     ModelGPT54Nano,
+// Alias constants for short names.
+const (
+	AliasGPT      = "gpt"
+	AliasMini     = "mini"
+	AliasNano     = "nano"
+	AliasPro      = "pro"
+	AliasCodex    = "codex"
+	AliasFlagship = "flagship"
+)
 
-	// Coding models
-	"codex": ModelGPT53Codex,
-
-	// Reasoning models
-	"o4": ModelO4Mini,
-	"o3": ModelO3,
-	"o1": ModelO1,
+// ProviderAliases maps short names to wire model IDs for this provider.
+var ProviderAliases = map[string]string{
+	AliasGPT:      ModelGPT54,
+	AliasMini:     ModelGPT54Mini,
+	AliasNano:     ModelGPT54Nano,
+	AliasPro:      ModelGPT54Pro,
+	AliasCodex:    ModelGPT53Codex,
+	AliasFlagship: ModelGPT54,
+	"o4":          ModelO4Mini,
+	"o3":          ModelO3,
+	"o1":          ModelO1,
 }
+
+// ModelAliases is kept for backward compatibility.
+var ModelAliases = ProviderAliases
 
 // modelCategory identifies reasoning support level for a model.
 type modelCategory int

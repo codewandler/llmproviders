@@ -12,6 +12,8 @@ import (
 func TestModelAliasResolution(t *testing.T) {
 	models := LoadModels()
 
+	// Provider-level aliases only (intent aliases like "default", "fast", "powerful"
+	// are resolved at the Service level, not here)
 	tests := []struct {
 		alias    string
 		expected string
@@ -20,9 +22,6 @@ func TestModelAliasResolution(t *testing.T) {
 		{"opus", ModelOpus, false},
 		{"sonnet", ModelSonnet, false},
 		{"haiku", ModelHaiku, false},
-		{"default", ModelSonnet, false},
-		{"fast", ModelSonnet, false},
-		{"powerful", ModelOpus, false},
 		{ModelOpus, ModelOpus, false},
 		{ModelSonnet, ModelSonnet, false},
 		{"SONNET", ModelSonnet, false}, // Case insensitive

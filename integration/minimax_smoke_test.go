@@ -28,7 +28,7 @@ func TestMiniMaxBasicStream(t *testing.T) {
 	}
 
 	// Create session with default model (M2.7)
-	session := p.Session()
+	session := p.CreateSession()
 
 	// Send simple request
 	events, err := session.Request(ctx, conversation.Request{
@@ -83,12 +83,13 @@ func TestMiniMaxModelResolution(t *testing.T) {
 		t.Fatalf("minimax.New() error = %v", err)
 	}
 
-	// Test with various aliases
-	aliases := []string{"minimax", "default", "fast", "m2.7", "m2.5"}
+	// Test with provider-level aliases only (intent aliases like "minimax", "default", "fast"
+	// are resolved at the Service level, not here)
+	aliases := []string{"m2.7", "m2.5"}
 
 	for _, alias := range aliases {
 		t.Run(alias, func(t *testing.T) {
-			session := p.Session(
+			session := p.CreateSession(
 				conversation.WithModel(alias),
 			)
 
@@ -154,7 +155,7 @@ func TestMiniMaxToolUse(t *testing.T) {
 	}
 
 	// Create session with tool
-	session := p.Session(
+	session := p.CreateSession(
 		conversation.WithTools([]unified.Tool{weatherTool}),
 	)
 
@@ -242,7 +243,7 @@ func TestMiniMaxMultiTurn(t *testing.T) {
 		t.Fatalf("minimax.New() error = %v", err)
 	}
 
-	session := p.Session()
+	session := p.CreateSession()
 
 	// Turn 1: Introduce a topic
 	t.Log("Turn 1: Setting context...")

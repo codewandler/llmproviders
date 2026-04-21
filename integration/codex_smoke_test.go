@@ -27,7 +27,7 @@ func TestCodexBasicStream(t *testing.T) {
 	}
 
 	// Create session with default model
-	session := p.Session()
+	session := p.CreateSession()
 
 	// Send simple request
 	events, err := session.Request(ctx, conversation.Request{
@@ -86,7 +86,7 @@ func TestCodexModelResolution(t *testing.T) {
 
 	for _, alias := range aliases {
 		t.Run(alias, func(t *testing.T) {
-			session := p.Session(
+			session := p.CreateSession(
 				conversation.WithModel(alias),
 			)
 
@@ -151,7 +151,7 @@ func TestCodexToolUse(t *testing.T) {
 	}
 
 	// Create session with tool
-	session := p.Session(
+	session := p.CreateSession(
 		conversation.WithTools([]unified.Tool{weatherTool}),
 	)
 
@@ -238,7 +238,7 @@ func TestCodexMultiTurn(t *testing.T) {
 		t.Fatalf("codex.New() error = %v", err)
 	}
 
-	session := p.Session()
+	session := p.CreateSession()
 
 	// Turn 1: Introduce a topic
 	t.Log("Turn 1: Setting context...")

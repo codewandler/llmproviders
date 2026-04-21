@@ -5,6 +5,61 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-04-21
+
+### Added
+
+- **CLI infrastructure** (`cli/`, `cmd/llmcli`)
+  - Importable CLI commands for embedding in other tools
+  - `llmcli` standalone binary
+  - Commands: `intents`, `providers`, `aliases`, `models`, `resolve`, `catalog`
+  - IO abstraction for testability and composition
+  - JSON output support for programmatic use
+
+- **Registry and Service layer** (`registry/`, `service.go`)
+  - `Registry` for provider registration with priority ordering
+  - `Service` as the main entry point for model resolution
+  - Auto-detection registry (`registry/auto`) that discovers available providers
+  - Provider priority: anthropic(20) < openai(40) < openrouter(50) < minimax(60) < ollama(70) < codex(80) < dockermr(90)
+
+- **Intent aliases** (`intent.go`)
+  - Semantic model shortcuts: `fast`, `default`, `powerful`
+  - Resolution based on highest-priority detected provider
+  - Example: `fast` → `claude-haiku-4-5-20251001` (anthropic)
+
+- **Provider aliases**
+  - Short names registered per provider: `sonnet`, `opus`, `haiku`, `mini`, `nano`, etc.
+  - First detected provider wins for duplicate aliases
+  - Viewable via `llmcli aliases`
+
+- **Model resolution** with documented priority order:
+  1. Intent aliases (fast, default, powerful)
+  2. Provider aliases (sonnet, opus, mini, etc.)
+  3. Catalog wire model lookup
+  4. Parse as [instance/]service/model
+  5. Bare model search across all services
+
+- **Provider type alias** at root package (`provider.go`)
+  - `llmproviders.Provider` as type alias to `registry.Provider`
+  - Cleaner imports for consumers
+
+- **Provider registration files**
+  - Each provider now has `registration.go` with `Registration()` function
+  - Declares: InstanceName, ServiceID, Order, Aliases, IntentAliases, Detect, Build
+
+### Fixed
+
+- Model resolution for wire model IDs like `anthropic/claude-3-5-haiku`
+  - Now correctly routes to OpenRouter (which has this in its catalog)
+  - Previously failed by parsing as service=anthropic, model=claude-3-5-haiku
+
+- Default models for local providers (ollama, dockermr) use larger models for reliable chat
+
+### Changed
+
+- Providers now implement `registry.Provider` interface with `Name()` method
+- Integration tests updated to use new Service layer
+
 ## [0.3.0] - 2026-04-20
 
 ### Added
@@ -95,6 +150,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Environment variable constants exported by each provider
 - Built on [agentapis](https://github.com/codewandler/agentapis) for protocol adapters
 
+[0.4.0]: https://github.com/codewandler/llmproviders/releases/tag/v0.4.0
 [0.3.0]: https://github.com/codewandler/llmproviders/releases/tag/v0.3.0
 [0.2.0]: https://github.com/codewandler/llmproviders/releases/tag/v0.2.0
 [0.1.0]: https://github.com/codewandler/llmproviders/releases/tag/v0.1.0

@@ -8,7 +8,7 @@ import (
 	"github.com/codewandler/modeldb"
 )
 
-// Model ID constants for programmatic use.
+// Wire model ID constants for programmatic use.
 const (
 	// Claude 4.6 (current).
 	ModelOpus   = "claude-opus-4-6"
@@ -16,21 +16,28 @@ const (
 
 	// Claude 4.5 (Haiku latest).
 	ModelHaiku = "claude-haiku-4-5-20251001"
+
+	// Claude 4.5 others
+	ModelSonnet45 = "claude-sonnet-4-5-20250929"
+	ModelOpus45   = "claude-opus-4-5-20251101"
 )
 
-// ModelAliases maps short alias names to full model IDs.
-var ModelAliases = map[string]string{
-	"opus":   ModelOpus,
-	"sonnet": ModelSonnet,
-	"haiku":  ModelHaiku,
+// Alias constants for short names.
+const (
+	AliasSonnet = "sonnet"
+	AliasOpus   = "opus"
+	AliasHaiku  = "haiku"
+)
+
+// ProviderAliases maps short names to wire model IDs for this provider.
+var ProviderAliases = map[string]string{
+	AliasSonnet: ModelSonnet,
+	AliasOpus:   ModelOpus,
+	AliasHaiku:  ModelHaiku,
 }
 
-// BuiltinAliases are special aliases for model selection.
-const (
-	ModelDefault  = "default"
-	ModelFast     = "fast"
-	ModelPowerful = "powerful"
-)
+// ModelAliases is kept for backward compatibility.
+var ModelAliases = ProviderAliases
 
 // Model represents a model available from the provider.
 type Model struct {
@@ -45,12 +52,12 @@ type Models []Model
 
 // fallbackModels provides a static list when modeldb is unavailable.
 var fallbackModels = Models{
-	{ID: ModelSonnet, Name: "Claude Sonnet 4.6", Provider: ProviderName, Aliases: []string{ModelDefault, ModelFast, "sonnet"}},
-	{ID: ModelOpus, Name: "Claude Opus 4.6", Provider: ProviderName, Aliases: []string{ModelPowerful, "opus"}},
-	{ID: ModelHaiku, Name: "Claude Haiku 4.5", Provider: ProviderName, Aliases: []string{"haiku"}},
-	{ID: "claude-sonnet-4-5-20250929", Name: "Claude Sonnet 4.5", Provider: ProviderName},
+	{ID: ModelSonnet, Name: "Claude Sonnet 4.6", Provider: ProviderName, Aliases: []string{AliasSonnet}},
+	{ID: ModelOpus, Name: "Claude Opus 4.6", Provider: ProviderName, Aliases: []string{AliasOpus}},
+	{ID: ModelHaiku, Name: "Claude Haiku 4.5", Provider: ProviderName, Aliases: []string{AliasHaiku}},
+	{ID: ModelSonnet45, Name: "Claude Sonnet 4.5", Provider: ProviderName},
 	{ID: "claude-opus-4-5", Name: "Claude Opus 4.5", Provider: ProviderName},
-	{ID: "claude-opus-4-5-20251101", Name: "Claude Opus 4.5", Provider: ProviderName},
+	{ID: ModelOpus45, Name: "Claude Opus 4.5", Provider: ProviderName},
 	{ID: "claude-haiku-4-5", Name: "Claude Haiku 4.5", Provider: ProviderName},
 	{ID: "claude-opus-4-1", Name: "Claude Opus 4.1", Provider: ProviderName},
 	{ID: "claude-opus-4-1-20250805", Name: "Claude Opus 4.1", Provider: ProviderName},

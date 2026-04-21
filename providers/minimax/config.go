@@ -7,8 +7,11 @@ const (
 	// MiniMax uses an Anthropic-compatible API at this endpoint.
 	DefaultBaseURL = "https://api.minimax.io/anthropic"
 
-	// ProviderName is the canonical name for this provider.
+	// ProviderName is the canonical name for this provider instance.
 	ProviderName = "minimax"
+
+	// ServiceID is the modeldb service identifier for this provider.
+	ServiceID = "minimax"
 
 	// DefaultModel is the default model when none is specified.
 	DefaultModel = ModelM27

@@ -16,6 +16,24 @@ const (
 	ModelM2           = "MiniMax-M2"
 )
 
+// Alias constants for short names.
+const (
+	AliasM27  = "m2.7"
+	AliasM25  = "m2.5"
+	AliasM21  = "m2.1"
+	AliasM2   = "m2"
+	AliasFast = "highspeed"
+)
+
+// ProviderAliases maps short names to wire model IDs for this provider.
+var ProviderAliases = map[string]string{
+	AliasM27:  ModelM27,
+	AliasM25:  ModelM25,
+	AliasM21:  ModelM21,
+	AliasM2:   ModelM2,
+	AliasFast: ModelM27Highspeed,
+}
+
 // Model represents a MiniMax model.
 type Model struct {
 	ID          string

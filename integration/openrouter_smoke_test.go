@@ -28,7 +28,7 @@ func TestOpenRouterBasicStream(t *testing.T) {
 	}
 
 	// Create session with auto model
-	session := p.Session()
+	session := p.CreateSession()
 
 	// Send simple request
 	events, err := session.Request(ctx, conversation.Request{
@@ -100,7 +100,7 @@ func TestOpenRouterToolUse(t *testing.T) {
 	}
 
 	// Create session with tool
-	session := p.Session(
+	session := p.CreateSession(
 		conversation.WithTools([]unified.Tool{weatherTool}),
 	)
 
@@ -191,7 +191,7 @@ func TestOpenRouterAnthropicModel(t *testing.T) {
 
 	// Create session with Anthropic model (uses Messages API)
 	// Using claude-3-haiku which is typically free/cheap on OpenRouter
-	session := p.Session(
+	session := p.CreateSession(
 		conversation.WithModel("anthropic/claude-3-haiku"),
 	)
 
@@ -240,7 +240,7 @@ func TestOpenRouterMultiTurn(t *testing.T) {
 		t.Fatalf("openrouter.New() error = %v", err)
 	}
 
-	session := p.Session()
+	session := p.CreateSession()
 
 	// Turn 1: Introduce a topic
 	t.Log("Turn 1: Setting context...")

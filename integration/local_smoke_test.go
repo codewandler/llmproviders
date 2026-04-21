@@ -36,7 +36,7 @@ func TestOllamaBasicStream(t *testing.T) {
 		t.Fatalf("Failed to create Ollama provider: %v", err)
 	}
 
-	session := provider.Session()
+	session := provider.CreateSession()
 
 	events, err := session.Request(ctx, conversation.Request{
 		Inputs: []conversation.Input{{
@@ -107,7 +107,7 @@ func TestOllamaMultiTurn(t *testing.T) {
 		t.Fatalf("Failed to create Ollama provider: %v", err)
 	}
 
-	session := provider.Session()
+	session := provider.CreateSession()
 
 	// Turn 1: Set context
 	t.Log("Turn 1: Setting context...")
@@ -166,7 +166,7 @@ func TestDockerMRBasicStream(t *testing.T) {
 		t.Fatalf("Failed to create DockerMR provider: %v", err)
 	}
 
-	session := provider.Session()
+	session := provider.CreateSession()
 
 	events, err := session.Request(ctx, conversation.Request{
 		Inputs: []conversation.Input{{
@@ -237,7 +237,7 @@ func TestDockerMRMultiTurn(t *testing.T) {
 		t.Fatalf("Failed to create DockerMR provider: %v", err)
 	}
 
-	session := provider.Session()
+	session := provider.CreateSession()
 
 	// Turn 1: Set context
 	t.Log("Turn 1: Setting context...")

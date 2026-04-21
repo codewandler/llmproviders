@@ -22,7 +22,13 @@
 package dockermr
 
 // Provider name constant.
-const ProviderName = "dockermr"
+const (
+	// ProviderName is the identifier for this provider instance.
+	ProviderName = "dockermr"
+
+	// ServiceID is the modeldb service identifier for this provider.
+	ServiceID = "dockermr"
+)
 
 // Default configuration values.
 const (

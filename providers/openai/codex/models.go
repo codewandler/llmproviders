@@ -39,12 +39,35 @@ func (m Models) Resolve(id string) (Model, bool) {
 	return Model{ID: id, Name: id}, false
 }
 
-// modelAliases maps common aliases to canonical model IDs.
+// Wire model ID constants for programmatic use.
+const (
+	ModelGPT54     = "gpt-5.4"
+	ModelGPT54Mini = "gpt-5.4-mini"
+	ModelGPT53     = "gpt-5.3-codex"
+	ModelO3        = "o3"
+	ModelO4Mini    = "o4-mini"
+)
+
+// Alias constants for short names.
+const (
+	AliasCodex = "codex"
+	AliasMini  = "mini"
+	AliasO3    = "o3"
+)
+
+// ProviderAliases maps short names to wire model IDs for this provider.
+var ProviderAliases = map[string]string{
+	AliasCodex: ModelGPT54,
+	AliasMini:  ModelGPT54Mini,
+	AliasO3:    ModelO3,
+}
+
+// modelAliases maps common aliases to canonical model IDs (for internal use).
 var modelAliases = map[string]string{
-	"codex":   "gpt-5.4",
-	"default": "gpt-5.4",
-	"fast":    "gpt-5.4-mini",
-	"mini":    "gpt-5.4-mini",
+	"codex":   ModelGPT54,
+	"default": ModelGPT54,
+	"fast":    ModelGPT54Mini,
+	"mini":    ModelGPT54Mini,
 }
 
 // LoadModels returns the embedded fallback model list.
