@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.4] - 2026-04-21
+
+### Fixed
+
+- Claude OAuth provider request shaping now matches the working Claude implementation more closely:
+  - added missing Claude static headers
+  - added Claude system blocks and metadata injection
+  - added Claude-style session/user ID augmentation
+- `claude/` model routing now behaves consistently with the Claude OAuth-backed provider expectations when using local Claude credentials
+
+### Added
+
+- Unit tests for Claude-specific Anthropic provider behavior:
+  - Claude header injection
+  - Claude request augmentation
+  - Claude user ID construction
+  - Claude session UUID generation
+
 ## [0.5.3] - 2026-04-21
 
 ### Changed

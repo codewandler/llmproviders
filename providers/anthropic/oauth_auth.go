@@ -93,6 +93,8 @@ func setClaudeHeaders(h http.Header) {
 	h.Set("X-Stainless-Runtime", "node")
 	h.Set("X-Stainless-Runtime-Version", stainlessNodeVer)
 	h.Set("X-Stainless-Timeout", "600")
+	h.Set("Accept-Encoding", "gzip, deflate, br, zstd")
+	h.Set("Connection", "keep-alive")
 }
 
 func stainlessOS() string {

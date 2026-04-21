@@ -2,12 +2,22 @@ package anthropic
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/json"
+	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
 
 	messagesapi "github.com/codewandler/agentapis/api/messages"
 	"github.com/codewandler/agentapis/api/unified"
 	"github.com/codewandler/agentapis/client"
 	"github.com/codewandler/agentapis/conversation"
+)
+
+const (
+	claudeBillingHeader = "x-anthropic-billing-header: cc_version=2.1.85.613; cc_entrypoint=sdk-cli; cch=1757e;"
+	claudeSystemCore    = "You are a Claude agent, built on Anthropic's Claude Agent SDK."
 )
 
 // Provider implements the Anthropic Messages API provider.
@@ -18,6 +28,8 @@ type Provider struct {
 	models         Models
 	messagesClient *client.MessagesClient
 	claudeHeaders  bool
+	userID         string
+	sessionID      string
 
 	// Behavior options
 	autoSystemCacheControl bool
@@ -66,6 +78,25 @@ func New(opts ...Option) (*Provider, error) {
 		HTTPClient: o.httpClient,
 	}
 
+	name := o.name
+	if name == "" {
+		name = ProviderName
+	}
+
+	p := &Provider{
+		name:                   name,
+		cfg:                    cfg,
+		auth:                   auth,
+		models:                 LoadModels(),
+		claudeHeaders:          o.claudeHeaders,
+		autoSystemCacheControl: o.autoSystemCacheControl,
+		autoSystemCacheTTL:     o.autoSystemCacheTTL,
+		sessionID:              randomUUID(),
+	}
+	if p.claudeHeaders {
+		p.userID = buildClaudeUserID(p.sessionID)
+	}
+
 	// Build protocol options
 	// Capture claudeHeaders for use in closures
 	claudeHeaders := o.claudeHeaders
@@ -83,6 +114,7 @@ func New(opts ...Option) (*Provider, error) {
 		messagesapi.WithHTTPRequestMutator(func(ctx context.Context, httpReq *http.Request, req *messagesapi.Request) error {
 			// Set required Anthropic headers
 			httpReq.Header.Set("Content-Type", "application/json")
+			httpReq.Header.Set("Accept", "application/json")
 			httpReq.Header.Set("Anthropic-Version", AnthropicVersion)
 
 			// Only set Anthropic-Beta if NOT using Claude headers.
@@ -103,6 +135,9 @@ func New(opts ...Option) (*Provider, error) {
 		messagesapi.WithRequestTransform(func(ctx context.Context, req *messagesapi.Request) error {
 			// Apply thinking temperature coercion
 			CoerceThinkingTemperature(req)
+			if p.claudeHeaders {
+				augmentClaudeRequest(req, p.userID, p.autoSystemCacheControl, p.autoSystemCacheTTL)
+			}
 			return nil
 		}),
 	}
@@ -128,24 +163,7 @@ func New(opts ...Option) (*Provider, error) {
 	protocol := messagesapi.NewClient(protocolOpts...)
 
 	// Create the high-level unified client
-	messagesClient := client.NewMessagesClient(protocol)
-
-	// Determine provider name (default to ProviderName if not set)
-	name := o.name
-	if name == "" {
-		name = ProviderName
-	}
-
-	p := &Provider{
-		name:                   name,
-		cfg:                    cfg,
-		auth:                   auth,
-		models:                 LoadModels(),
-		messagesClient:         messagesClient,
-		claudeHeaders:          o.claudeHeaders,
-		autoSystemCacheControl: o.autoSystemCacheControl,
-		autoSystemCacheTTL:     o.autoSystemCacheTTL,
-	}
+	p.messagesClient = client.NewMessagesClient(protocol)
 
 	return p, nil
 }
@@ -203,4 +221,69 @@ func (p *Provider) CreateSession(opts ...conversation.Option) *conversation.Sess
 }
 
 // Ensure Provider implements conversation.Streamer.
+
+func augmentClaudeRequest(req *messagesapi.Request, userID string, autoSystemCacheControl bool, autoSystemCacheTTL string) {
+	if req == nil {
+		return
+	}
+
+	req.System = append(messagesapi.SystemBlocks{
+		&messagesapi.TextBlock{Type: messagesapi.BlockTypeText, Text: claudeBillingHeader},
+		&messagesapi.TextBlock{Type: messagesapi.BlockTypeText, Text: claudeSystemCore},
+	}, req.System...)
+
+	if autoSystemCacheControl && len(req.System) > 1 && req.System[1] != nil && req.System[1].CacheControl == nil {
+		ttl := autoSystemCacheTTL
+		if ttl == "" {
+			ttl = "1h"
+		}
+		req.System[1].CacheControl = &messagesapi.CacheControl{Type: "ephemeral", TTL: ttl}
+	}
+
+	if userID != "" {
+		req.Metadata = &messagesapi.Metadata{UserID: userID}
+	}
+}
+
+func buildClaudeUserID(sessionID string) string {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return ""
+	}
+	data, err := os.ReadFile(filepath.Join(home, ".claude.json"))
+	if err != nil {
+		return ""
+	}
+
+	var cfg struct {
+		UserID       string `json:"userID"`
+		OAuthAccount struct {
+			AccountUUID string `json:"accountUuid"`
+		} `json:"oauthAccount"`
+	}
+	if err := json.Unmarshal(data, &cfg); err != nil || cfg.UserID == "" {
+		return ""
+	}
+
+	id := map[string]string{
+		"device_id":    cfg.UserID,
+		"account_uuid": cfg.OAuthAccount.AccountUUID,
+		"session_id":   sessionID,
+	}
+	data, err = json.Marshal(id)
+	if err != nil {
+		return ""
+	}
+	return string(data)
+}
+
+func randomUUID() string {
+	var b [16]byte
+	if _, err := rand.Read(b[:]); err != nil {
+		panic("anthropic: crypto/rand unavailable: " + err.Error())
+	}
+	b[6] = (b[6] & 0x0f) | 0x40
+	b[8] = (b[8] & 0x3f) | 0x80
+	return fmt.Sprintf("%08x-%04x-%04x-%04x-%012x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:16])
+}
 var _ conversation.Streamer = (*Provider)(nil)

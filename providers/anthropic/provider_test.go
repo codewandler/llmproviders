@@ -3,6 +3,8 @@ package anthropic
 import (
 	"context"
 	"net/http"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -256,6 +258,103 @@ func containsSubstr(s, substr string) bool {
 		}
 	}
 	return false
+}
+
+func TestSetClaudeHeaders(t *testing.T) {
+	h := make(http.Header)
+	setClaudeHeaders(h)
+
+	checks := map[string]string{
+		"User-Agent":                                claudeUserAgent,
+		"Anthropic-Beta":                            claudeBeta,
+		"Anthropic-Dangerous-Direct-Browser-Access": "true",
+		"X-App":                                     "cli",
+		"X-Stainless-Lang":                          "js",
+		"X-Stainless-Package-Version":               stainlessPackageVer,
+		"X-Stainless-Retry-Count":                   "0",
+		"X-Stainless-Runtime":                       "node",
+		"X-Stainless-Runtime-Version":               stainlessNodeVer,
+		"X-Stainless-Timeout":                       "600",
+		"Accept-Encoding":                           "gzip, deflate, br, zstd",
+		"Connection":                                "keep-alive",
+	}
+
+	for key, want := range checks {
+		if got := h.Get(key); got != want {
+			t.Fatalf("header %s = %q, want %q", key, got, want)
+		}
+	}
+}
+
+func TestAugmentClaudeRequest(t *testing.T) {
+	t.Run("injects claude system blocks and metadata", func(t *testing.T) {
+		req := &messagesapi.Request{
+			System: messagesapi.SystemBlocks{
+				&messagesapi.TextBlock{Type: messagesapi.BlockTypeText, Text: "original system"},
+			},
+		}
+
+		augmentClaudeRequest(req, `{"device_id":"dev","account_uuid":"acct","session_id":"sess"}`, false, "")
+
+		if len(req.System) != 3 {
+			t.Fatalf("len(System) = %d, want 3", len(req.System))
+		}
+
+		first := req.System[0]
+		if first == nil || first.Text != claudeBillingHeader {
+			t.Fatalf("System[0] = %#v, want billing header block", req.System[0])
+		}
+		second := req.System[1]
+		if second == nil || second.Text != claudeSystemCore {
+			t.Fatalf("System[1] = %#v, want claude system block", req.System[1])
+		}
+		if req.Metadata == nil || req.Metadata.UserID != `{"device_id":"dev","account_uuid":"acct","session_id":"sess"}` {
+			t.Fatalf("Metadata = %#v, want injected user id", req.Metadata)
+		}
+	})
+
+	t.Run("applies cache control to second system block when enabled", func(t *testing.T) {
+		req := &messagesapi.Request{}
+		augmentClaudeRequest(req, "", true, "30m")
+
+		if len(req.System) < 2 {
+			t.Fatalf("len(System) = %d, want at least 2", len(req.System))
+		}
+		second := req.System[1]
+		if second == nil {
+			t.Fatalf("System[1] = %#v, want text block", req.System[1])
+		}
+		if second.CacheControl == nil || second.CacheControl.Type != "ephemeral" || second.CacheControl.TTL != "30m" {
+			t.Fatalf("System[1].CacheControl = %#v, want ephemeral/30m", second.CacheControl)
+		}
+	})
+}
+
+func TestBuildClaudeUserID(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	content := `{"userID":"device-1","oauthAccount":{"accountUuid":"acct-1"}}`
+	if err := os.WriteFile(filepath.Join(home, ".claude.json"), []byte(content), 0o600); err != nil {
+		t.Fatalf("WriteFile() error = %v", err)
+	}
+
+	got := buildClaudeUserID("session-1")
+	want := `{"account_uuid":"acct-1","device_id":"device-1","session_id":"session-1"}`
+	if got != want {
+		t.Fatalf("buildClaudeUserID() = %q, want %q", got, want)
+	}
+}
+
+func TestRandomUUID(t *testing.T) {
+	got := randomUUID()
+	if len(got) != 36 {
+		t.Fatalf("randomUUID() len = %d, want 36", len(got))
+	}
+	for _, idx := range []int{8, 13, 18, 23} {
+		if got[idx] != '-' {
+			t.Fatalf("randomUUID() = %q, want hyphen at %d", got, idx)
+		}
+	}
 }
 
 func TestLoadModels(t *testing.T) {
