@@ -129,8 +129,8 @@ func TestConfigHelpers(t *testing.T) {
 	if cfg.model() != DefaultModel {
 		t.Errorf("empty config model() = %q, want %q", cfg.model(), DefaultModel)
 	}
-	if cfg.httpClient() != http.DefaultClient {
-		t.Error("empty config httpClient() should return http.DefaultClient")
+	if cfg.httpClient() != nil {
+		t.Error("empty config httpClient() should return nil so agentapis can use its default client")
 	}
 
 	// Custom config should return custom values

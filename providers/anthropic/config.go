@@ -18,8 +18,8 @@ type Config struct {
 	// Model is the default model to use. Defaults to DefaultModel.
 	Model string
 
-	// HTTPClient is the HTTP client for API requests.
-	// If nil, http.DefaultClient is used.
+	// HTTPClient is an optional custom HTTP client for API requests.
+	// If nil, the underlying agentapis default client is used.
 	HTTPClient *http.Client
 }
 
@@ -31,12 +31,9 @@ func DefaultConfig() Config {
 	}
 }
 
-// httpClient returns the configured HTTP client or the default.
+// httpClient returns the configured custom HTTP client, if any.
 func (c Config) httpClient() *http.Client {
-	if c.HTTPClient != nil {
-		return c.HTTPClient
-	}
-	return http.DefaultClient
+	return c.HTTPClient
 }
 
 // baseURL returns the configured base URL or the default.

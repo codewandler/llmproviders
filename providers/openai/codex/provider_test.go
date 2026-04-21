@@ -15,7 +15,7 @@ import (
 func testAuth() *Auth {
 	token := testJWT(time.Now().Add(time.Hour))
 	return &Auth{
-		auth: authFile{Tokens: tokenStore{AccessToken: token, AccountID: "acct-test"}},
+		auth:       authFile{Tokens: tokenStore{AccessToken: token, AccountID: "acct-test"}},
 		expiry:     time.Now().Add(time.Hour),
 		httpClient: http.DefaultClient,
 	}
@@ -23,7 +23,7 @@ func testAuth() *Auth {
 
 func TestProviderBuildHeaders(t *testing.T) {
 	p := &Provider{
-		cfg: Config{InstallationID: "install-1", BetaFeatures: "feat-a,feat-b"},
+		cfg:  Config{InstallationID: "install-1", BetaFeatures: "feat-a,feat-b"},
 		auth: testAuth(),
 	}
 	p.SetTurnState("sticky-1")

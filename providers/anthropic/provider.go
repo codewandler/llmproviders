@@ -103,7 +103,6 @@ func New(opts ...Option) (*Provider, error) {
 
 	protocolOpts := []messagesapi.Option{
 		messagesapi.WithBaseURL(cfg.baseURL()),
-		messagesapi.WithHTTPClient(cfg.httpClient()),
 		messagesapi.WithHeaderFunc(func(ctx context.Context, req *messagesapi.Request) (http.Header, error) {
 			h := make(http.Header)
 			if err := auth.ApplyAuth(ctx, h); err != nil {
@@ -140,6 +139,9 @@ func New(opts ...Option) (*Provider, error) {
 			}
 			return nil
 		}),
+	}
+	if cfg.httpClient() != nil {
+		protocolOpts = append(protocolOpts, messagesapi.WithHTTPClient(cfg.httpClient()))
 	}
 
 	// Add auto system cache control transform if enabled
@@ -286,4 +288,5 @@ func randomUUID() string {
 	b[8] = (b[8] & 0x3f) | 0x80
 	return fmt.Sprintf("%08x-%04x-%04x-%04x-%012x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:16])
 }
+
 var _ conversation.Streamer = (*Provider)(nil)

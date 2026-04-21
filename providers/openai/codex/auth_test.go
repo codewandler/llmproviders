@@ -91,7 +91,7 @@ func TestAuthToken(t *testing.T) {
 	t.Run("returns unexpired access token without refresh", func(t *testing.T) {
 		want := testJWT(time.Now().Add(10 * time.Minute))
 		a := &Auth{
-			auth: authFile{Tokens: tokenStore{AccessToken: want}},
+			auth:       authFile{Tokens: tokenStore{AccessToken: want}},
 			expiry:     time.Now().Add(10 * time.Minute),
 			httpClient: http.DefaultClient,
 		}
@@ -114,7 +114,7 @@ func TestAuthToken(t *testing.T) {
 		}
 		newToken := testJWT(time.Now().Add(time.Hour))
 		a := &Auth{
-			auth: authFile{Tokens: tokenStore{AccessToken: oldToken, RefreshToken: "old-refresh"}},
+			auth:   authFile{Tokens: tokenStore{AccessToken: oldToken, RefreshToken: "old-refresh"}},
 			path:   path,
 			expiry: time.Now().Add(-time.Minute),
 			httpClient: &http.Client{Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
@@ -153,7 +153,7 @@ func TestAuthToken(t *testing.T) {
 func TestAuthSetHeaders(t *testing.T) {
 	token := testJWT(time.Now().Add(time.Hour))
 	a := &Auth{
-		auth: authFile{Tokens: tokenStore{AccessToken: token, AccountID: "acct-42"}},
+		auth:       authFile{Tokens: tokenStore{AccessToken: token, AccountID: "acct-42"}},
 		expiry:     time.Now().Add(time.Hour),
 		httpClient: http.DefaultClient,
 	}
@@ -182,8 +182,8 @@ func TestJWTExpiry(t *testing.T) {
 
 func TestFetchRawModelsAndFetchModels(t *testing.T) {
 	a := &Auth{
-		auth: authFile{Tokens: tokenStore{AccessToken: testJWT(time.Now().Add(time.Hour)), AccountID: "acct-9"}},
-		expiry: time.Now().Add(time.Hour),
+		auth:       authFile{Tokens: tokenStore{AccessToken: testJWT(time.Now().Add(time.Hour)), AccountID: "acct-9"}},
+		expiry:     time.Now().Add(time.Hour),
 		httpClient: http.DefaultClient,
 	}
 	client := &http.Client{Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
@@ -252,7 +252,7 @@ func TestLoadAuthUsesOverridePath(t *testing.T) {
 	path := filepath.Join(dir, "auth.json")
 	content := map[string]any{
 		"auth_mode": ChatGPTAuthMode,
-		"tokens": map[string]any{"refresh_token": "refresh"},
+		"tokens":    map[string]any{"refresh_token": "refresh"},
 	}
 	raw, _ := json.Marshal(content)
 	if err := os.WriteFile(path, raw, 0o600); err != nil {

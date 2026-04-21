@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.5] - 2026-04-21
+
+### Changed
+
+- **Renamed `NewWithOAuthAndClaudeHeaders()` → `NewClaudeCode()`** — clearer constructor name for Claude Code-style provider setup
+- **Added `WithClaudeCode()` composite option** that bundles `WithLocalOAuth()`, `WithClaudeHeaders(true)`, and `WithName("claude")` into a single option
+- **HTTP client defaults now delegate to agentapis** — providers no longer fall back to `http.DefaultClient`; when no custom client is set, the underlying agentapis default client is used (with gzip, deflate, brotli, zstd compression support)
+- **Added `NewDefaultHTTPClient()`** to all four providers (anthropic, minimax, openai, openrouter) — returns a clone of the agentapis default HTTP client for safe customization
+- Updated `WithHTTPClient()` doc comments across all providers to reference `httpx.CloneDefaultClient()`
+
+### Added
+
+- **Tool use integration test** (`TestClaudeOAuthToolUse`) — end-to-end test covering tool call and tool result round-trip with the Claude Code provider
+
 ## [0.5.4] - 2026-04-21
 
 ### Fixed
@@ -278,6 +292,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Environment variable constants exported by each provider
 - Built on [agentapis](https://github.com/codewandler/agentapis) for protocol adapters
 
+[0.5.5]: https://github.com/codewandler/llmproviders/releases/tag/v0.5.5
+[0.5.4]: https://github.com/codewandler/llmproviders/releases/tag/v0.5.4
+[0.5.3]: https://github.com/codewandler/llmproviders/releases/tag/v0.5.3
+[0.5.2]: https://github.com/codewandler/llmproviders/releases/tag/v0.5.2
 [0.5.1]: https://github.com/codewandler/llmproviders/releases/tag/v0.5.1
 [0.5.0]: https://github.com/codewandler/llmproviders/releases/tag/v0.5.0
 [0.4.0]: https://github.com/codewandler/llmproviders/releases/tag/v0.4.0

@@ -265,18 +265,18 @@ func TestSetClaudeHeaders(t *testing.T) {
 	setClaudeHeaders(h)
 
 	checks := map[string]string{
-		"User-Agent":                                claudeUserAgent,
-		"Anthropic-Beta":                            claudeBeta,
+		"User-Agent":     claudeUserAgent,
+		"Anthropic-Beta": claudeBeta,
 		"Anthropic-Dangerous-Direct-Browser-Access": "true",
-		"X-App":                                     "cli",
-		"X-Stainless-Lang":                          "js",
-		"X-Stainless-Package-Version":               stainlessPackageVer,
-		"X-Stainless-Retry-Count":                   "0",
-		"X-Stainless-Runtime":                       "node",
-		"X-Stainless-Runtime-Version":               stainlessNodeVer,
-		"X-Stainless-Timeout":                       "600",
-		"Accept-Encoding":                           "gzip, deflate, br, zstd",
-		"Connection":                                "keep-alive",
+		"X-App":                       "cli",
+		"X-Stainless-Lang":            "js",
+		"X-Stainless-Package-Version": stainlessPackageVer,
+		"X-Stainless-Retry-Count":     "0",
+		"X-Stainless-Runtime":         "node",
+		"X-Stainless-Runtime-Version": stainlessNodeVer,
+		"X-Stainless-Timeout":         "600",
+		"Accept-Encoding":             "gzip, deflate, br, zstd",
+		"Connection":                  "keep-alive",
 	}
 
 	for key, want := range checks {
@@ -411,8 +411,8 @@ func TestConfigHelpers(t *testing.T) {
 	if cfg.model() != DefaultModel {
 		t.Errorf("empty config model() = %q, want %q", cfg.model(), DefaultModel)
 	}
-	if cfg.httpClient() != http.DefaultClient {
-		t.Error("empty config httpClient() should return http.DefaultClient")
+	if cfg.httpClient() != nil {
+		t.Error("empty config httpClient() should return nil so agentapis can use its default client")
 	}
 
 	// Custom config should return custom values

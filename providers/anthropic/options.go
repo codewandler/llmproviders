@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	messagesapi "github.com/codewandler/agentapis/api/messages"
+	"github.com/codewandler/agentapis/httpx"
 )
 
 // RateLimits contains parsed rate limit information from Anthropic API response headers.
@@ -71,7 +72,10 @@ func WithModel(model string) Option {
 	}
 }
 
-// WithHTTPClient sets the HTTP client for API requests.
+// WithHTTPClient sets an optional custom HTTP client for API requests.
+//
+// Callers that want to preserve agentapis defaults while extending behavior
+// should start from httpx.CloneDefaultClient().
 func WithHTTPClient(c *http.Client) Option {
 	return func(o *providerOptions) {
 		o.httpClient = c
@@ -124,6 +128,16 @@ func WithClaudeHeaders(enabled bool) Option {
 	}
 }
 
+// WithClaudeCode configures the provider to behave like Claude Code using local
+// Claude OAuth credentials, Claude-compatible headers, and the "claude" instance name.
+func WithClaudeCode() Option {
+	return func(o *providerOptions) {
+		WithLocalOAuth()(o)
+		WithClaudeHeaders(true)(o)
+		WithName("claude")(o)
+	}
+}
+
 // --- Behavior options ---
 
 // WithAutoSystemCacheControl enables automatic cache_control on the last system block.
@@ -164,4 +178,11 @@ func applyOptions(opts []Option) *providerOptions {
 		opt(o)
 	}
 	return o
+}
+
+// NewDefaultHTTPClient returns a clone of the default agentapis HTTP client.
+//
+// It supports gzip, deflate, br, and zstd and can be safely customized by callers.
+func NewDefaultHTTPClient() *http.Client {
+	return httpx.CloneDefaultClient()
 }

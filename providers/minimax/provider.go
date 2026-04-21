@@ -43,9 +43,8 @@ func New(opts ...Option) (*Provider, error) {
 	}
 
 	// Create the low-level messages API client
-	protocol := messagesapi.NewClient(
+	protocolOpts := []messagesapi.Option{
 		messagesapi.WithBaseURL(cfg.baseURL()),
-		messagesapi.WithHTTPClient(cfg.httpClient()),
 		messagesapi.WithHeaderFunc(func(ctx context.Context, req *messagesapi.Request) (http.Header, error) {
 			h := make(http.Header)
 			if err := auth.ApplyAuth(ctx, h); err != nil {
@@ -67,7 +66,12 @@ func New(opts ...Option) (*Provider, error) {
 			}
 			return nil
 		}),
-	)
+	}
+	if cfg.httpClient() != nil {
+		protocolOpts = append(protocolOpts, messagesapi.WithHTTPClient(cfg.httpClient()))
+	}
+
+	protocol := messagesapi.NewClient(protocolOpts...)
 
 	// Create the high-level unified client
 	messagesClient := client.NewMessagesClient(protocol)

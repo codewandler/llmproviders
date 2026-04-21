@@ -24,6 +24,6 @@ var ClaudeRegister = registry.Registration{
 		return LocalTokenStoreAvailable(), nil
 	},
 	Build: func(ctx context.Context, cfg registry.BuildConfig) (registry.Provider, error) {
-		return NewWithOAuthAndClaudeHeaders()
+		return NewClaudeCode()
 	},
 }

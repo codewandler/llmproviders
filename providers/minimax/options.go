@@ -1,6 +1,10 @@
 package minimax
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/codewandler/agentapis/httpx"
+)
 
 // Option configures the Provider.
 type Option func(*providerOptions)
@@ -39,7 +43,10 @@ func WithModel(model string) Option {
 	}
 }
 
-// WithHTTPClient sets the HTTP client for API requests.
+// WithHTTPClient sets a custom HTTP client for API requests.
+//
+// Callers that want to preserve agentapis defaults while extending behavior
+// should start from httpx.CloneDefaultClient().
 func WithHTTPClient(c *http.Client) Option {
 	return func(o *providerOptions) {
 		o.httpClient = c
@@ -69,4 +76,11 @@ func applyOptions(opts []Option) *providerOptions {
 		opt(o)
 	}
 	return o
+}
+
+// NewDefaultHTTPClient returns a clone of the default agentapis HTTP client.
+//
+// It supports gzip, deflate, br, and zstd and can be safely customized by callers.
+func NewDefaultHTTPClient() *http.Client {
+	return httpx.CloneDefaultClient()
 }

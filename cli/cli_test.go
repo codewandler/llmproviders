@@ -14,7 +14,7 @@ import (
 
 type testProvider struct{ name string }
 
-func (p *testProvider) Name() string { return p.name }
+func (p *testProvider) Name() string                                                    { return p.name }
 func (p *testProvider) CreateSession(opts ...conversation.Option) *conversation.Session { return nil }
 
 func testService(t *testing.T) *llmproviders.Service {
@@ -94,10 +94,18 @@ func testService(t *testing.T) *llmproviders.Service {
 }
 
 func TestFormatHelpers(t *testing.T) {
-	if got := checkMark(true); got != "yes" { t.Fatalf("checkMark(true) = %q", got) }
-	if got := checkMark(false); got != "no" { t.Fatalf("checkMark(false) = %q", got) }
-	if got := checkSymbol(true); got != "[x]" { t.Fatalf("checkSymbol(true) = %q", got) }
-	if got := checkSymbol(false); got != "[ ]" { t.Fatalf("checkSymbol(false) = %q", got) }
+	if got := checkMark(true); got != "yes" {
+		t.Fatalf("checkMark(true) = %q", got)
+	}
+	if got := checkMark(false); got != "no" {
+		t.Fatalf("checkMark(false) = %q", got)
+	}
+	if got := checkSymbol(true); got != "[x]" {
+		t.Fatalf("checkSymbol(true) = %q", got)
+	}
+	if got := checkSymbol(false); got != "[ ]" {
+		t.Fatalf("checkSymbol(false) = %q", got)
+	}
 
 	got := sortedMapKeys(map[string]int{"b": 2, "a": 1, "c": 3})
 	want := []string{"a", "b", "c"}

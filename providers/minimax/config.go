@@ -63,10 +63,7 @@ func (c Config) model() string {
 	return DefaultModel
 }
 
-// httpClient returns the configured HTTP client or the default.
+// httpClient returns the configured custom HTTP client, if any.
 func (c Config) httpClient() *http.Client {
-	if c.HTTPClient != nil {
-		return c.HTTPClient
-	}
-	return http.DefaultClient
+	return c.HTTPClient
 }
