@@ -347,6 +347,13 @@ func (s *Service) parseModelRef(model string) parsedModelRef {
 	}
 }
 
+// ParseModelRef exposes the parser result for diagnostics and CLI explain output.
+func (s *Service) ParseModelRef(model string) parsedModelRef {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.parseModelRef(model)
+}
+
 // findServicesForWireModel finds all services that offer a given wire model.
 func (s *Service) findServicesForWireModel(wireModel string) []string {
 	var services []string
@@ -528,6 +535,18 @@ func (s *Service) RegisteredInstances() []string {
 	}
 	sort.Strings(names)
 	return names
+}
+
+// ServiceIDForInstance returns the service ID for a detected instance name.
+func (s *Service) ServiceIDForInstance(instanceName string) (string, bool) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	inst, ok := s.instances[instanceName]
+	if !ok {
+		return "", false
+	}
+	return inst.ServiceID, true
 }
 
 // IntentAliases returns the merged intent aliases.

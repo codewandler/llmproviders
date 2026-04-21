@@ -64,13 +64,15 @@ Examples:
 
 // ResolutionResult holds the result of resolving a model reference.
 type ResolutionResult struct {
-	Input        string
-	Type         string // "intent_alias", "provider_alias", "catalog_wire_model", "service_model", "bare_model"
-	WireModelID  string
-	ProviderName string
-	ServiceID    string
-	Steps        []ResolutionStep
-	Error        string
+	Input           string
+	ParsedAs        string
+	Type            string // "intent_alias", "provider_alias", "catalog_wire_model", "service_model", "bare_model"
+	WireModelID     string
+	InstanceName    string
+	ServiceID       string
+	RequestedPrefix string
+	Steps           []ResolutionStep
+	Error           string
 }
 
 // ResolutionStep describes one step in the resolution process.
@@ -92,11 +94,15 @@ func printResolve(w io.Writer, svc *llmproviders.Service, modelRef string) error
 		return nil
 	}
 
-	fmt.Fprintf(w, "  Type:       %s\n", formatResolutionType(result.Type))
-	fmt.Fprintf(w, "  Resolved:   %s\n", result.WireModelID)
-	fmt.Fprintf(w, "  Provider:   %s\n", result.ProviderName)
-	fmt.Fprintf(w, "  Service:    %s\n", result.ServiceID)
-	fmt.Fprintf(w, "  Wire model: %s\n", result.WireModelID)
+	fmt.Fprintf(w, "  Parsed as:    %s\n", result.ParsedAs)
+	if result.RequestedPrefix != "" {
+		fmt.Fprintf(w, "  Prefix:       %s\n", result.RequestedPrefix)
+	}
+	fmt.Fprintf(w, "  Type:         %s\n", formatResolutionType(result.Type))
+	fmt.Fprintf(w, "  Resolved:     %s\n", result.WireModelID)
+	fmt.Fprintf(w, "  Instance:     %s\n", result.InstanceName)
+	fmt.Fprintf(w, "  Service ID:   %s\n", result.ServiceID)
+	fmt.Fprintf(w, "  Wire model:   %s\n", result.WireModelID)
 	fmt.Fprintln(w)
 
 	fmt.Fprintln(w, "  Resolution path:")
@@ -134,8 +140,27 @@ func formatResolutionType(t string) string {
 
 func resolveWithDetails(svc *llmproviders.Service, modelRef string) ResolutionResult {
 	result := ResolutionResult{
-		Input: modelRef,
-		Steps: []ResolutionStep{},
+		Input:    modelRef,
+		ParsedAs: "bare model",
+		Steps:    []ResolutionStep{},
+	}
+
+	if strings.Contains(modelRef, "/") {
+		parts := strings.Split(modelRef, "/")
+		if len(parts) >= 2 {
+			result.RequestedPrefix = parts[0]
+		}
+		parsed := svc.ParseModelRef(modelRef)
+		switch {
+		case parsed.InstanceName != "" && parsed.ServiceID != "":
+			result.ParsedAs = "instance/service/model"
+		case parsed.InstanceName != "":
+			result.ParsedAs = "instance/model"
+		case parsed.ServiceID != "":
+			result.ParsedAs = "service/model"
+		default:
+			result.ParsedAs = "bare model"
+		}
 	}
 
 	// Step 1: Check intent aliases
@@ -147,7 +172,7 @@ func resolveWithDetails(svc *llmproviders.Service, modelRef string) ResolutionRe
 		result.Steps = append(result.Steps, step1)
 		result.Type = "intent_alias"
 		result.WireModelID = ref.WireModelID
-		result.ProviderName = ref.InstanceName
+		result.InstanceName = ref.InstanceName
 		result.ServiceID = ref.ServiceID
 		return result
 	}
@@ -161,7 +186,7 @@ func resolveWithDetails(svc *llmproviders.Service, modelRef string) ResolutionRe
 		step2.Detail = fmt.Sprintf("found in %s", target.InstanceName)
 		result.Steps = append(result.Steps, step2)
 		result.Type = "provider_alias"
-		result.ProviderName = target.InstanceName
+		result.InstanceName = target.InstanceName
 		result.ServiceID = target.ServiceID
 		result.WireModelID = target.WireModelID
 		return result
@@ -187,8 +212,8 @@ func resolveWithDetails(svc *llmproviders.Service, modelRef string) ResolutionRe
 	}
 
 	result.WireModelID = wireModel
-	result.ProviderName = provider.Name()
-	result.ServiceID = provider.Name() // Instance typically matches service
+	result.InstanceName = provider.Name()
+	result.ServiceID, _ = svc.ServiceIDForInstance(result.InstanceName)
 
 	// Determine which step matched
 	if strings.Contains(modelRef, "/") {
@@ -199,7 +224,7 @@ func resolveWithDetails(svc *llmproviders.Service, modelRef string) ResolutionRe
 				Step:    3,
 				Check:   "Checked catalog wire models",
 				Matched: true,
-				Detail:  fmt.Sprintf("found in %s catalog", provider.Name()),
+				Detail:  fmt.Sprintf("found in service=%s via instance=%s catalog", result.ServiceID, result.InstanceName),
 			}
 			result.Steps = append(result.Steps, step3)
 			result.Type = "catalog_wire_model"
@@ -211,7 +236,7 @@ func resolveWithDetails(svc *llmproviders.Service, modelRef string) ResolutionRe
 				Step:    4,
 				Check:   "Parsed as service/model",
 				Matched: true,
-				Detail:  fmt.Sprintf("service=%s, model=%s", provider.Name(), wireModel),
+				Detail:  fmt.Sprintf("instance=%s, service=%s, model=%s", result.InstanceName, result.ServiceID, wireModel),
 			}
 			result.Steps = append(result.Steps, step4)
 			result.Type = "service_model"
@@ -227,7 +252,7 @@ func resolveWithDetails(svc *llmproviders.Service, modelRef string) ResolutionRe
 			Step:    5,
 			Check:   "Searched all services",
 			Matched: true,
-			Detail:  fmt.Sprintf("found in %s", provider.Name()),
+			Detail:  fmt.Sprintf("found in service=%s via instance=%s", result.ServiceID, result.InstanceName),
 		}
 		result.Steps = append(result.Steps, step5)
 		result.Type = "bare_model"
@@ -237,13 +262,15 @@ func resolveWithDetails(svc *llmproviders.Service, modelRef string) ResolutionRe
 }
 
 type resolveJSONOutput struct {
-	Input       string            `json:"input"`
-	Type        string            `json:"type"`
-	WireModelID string            `json:"wire_model_id"`
-	Provider    string            `json:"provider"`
-	Service     string            `json:"service"`
-	Steps       []resolveJSONStep `json:"steps"`
-	Error       string            `json:"error,omitempty"`
+	Input           string            `json:"input"`
+	ParsedAs        string            `json:"parsed_as,omitempty"`
+	RequestedPrefix string            `json:"requested_prefix,omitempty"`
+	Type            string            `json:"type"`
+	WireModelID     string            `json:"wire_model_id"`
+	Instance        string            `json:"instance"`
+	ServiceID       string            `json:"service_id"`
+	Steps           []resolveJSONStep `json:"steps"`
+	Error           string            `json:"error,omitempty"`
 }
 
 type resolveJSONStep struct {
@@ -257,13 +284,15 @@ func printResolveJSON(w io.Writer, svc *llmproviders.Service, modelRef string) e
 	result := resolveWithDetails(svc, modelRef)
 
 	output := resolveJSONOutput{
-		Input:       result.Input,
-		Type:        result.Type,
-		WireModelID: result.WireModelID,
-		Provider:    result.ProviderName,
-		Service:     result.ServiceID,
-		Error:       result.Error,
-		Steps:       make([]resolveJSONStep, len(result.Steps)),
+		Input:           result.Input,
+		ParsedAs:        result.ParsedAs,
+		RequestedPrefix: result.RequestedPrefix,
+		Type:            result.Type,
+		WireModelID:     result.WireModelID,
+		Instance:        result.InstanceName,
+		ServiceID:       result.ServiceID,
+		Error:           result.Error,
+		Steps:           make([]resolveJSONStep, len(result.Steps)),
 	}
 
 	for i, step := range result.Steps {

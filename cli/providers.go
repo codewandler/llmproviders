@@ -61,7 +61,7 @@ The order value determines priority for intent alias resolution (lower = higher 
 
 func printProviders(w io.Writer, svc *llmproviders.Service, detectedOnly bool) error {
 	instances := svc.RegisteredInstances()
-	services := svc.RegisteredServices()
+	_ = svc.RegisteredServices()
 
 	if len(instances) == 0 {
 		fmt.Fprintln(w, "No providers detected.")
@@ -74,15 +74,10 @@ func printProviders(w io.Writer, svc *llmproviders.Service, detectedOnly bool) e
 	headers := []string{"INSTANCE", "SERVICE", "STATUS"}
 	var rows [][]string
 
-	// Build instance to service mapping from what we have
 	for _, inst := range instances {
-		// Find the service for this instance
-		serviceID := inst // Default to instance name
-		for _, svc := range services {
-			if svc == inst {
-				serviceID = svc
-				break
-			}
+		serviceID, ok := svc.ServiceIDForInstance(inst)
+		if !ok {
+			serviceID = "unknown"
 		}
 		rows = append(rows, []string{inst, serviceID, "detected"})
 	}
@@ -118,9 +113,13 @@ func printProvidersJSON(w io.Writer, svc *llmproviders.Service) error {
 	}
 
 	for _, inst := range instances {
+		serviceID, ok := svc.ServiceIDForInstance(inst)
+		if !ok {
+			serviceID = "unknown"
+		}
 		output.Providers = append(output.Providers, providerJSONInfo{
 			Instance: inst,
-			Service:  inst, // Instance name typically matches service
+			Service:  serviceID,
 			Detected: true,
 		})
 	}

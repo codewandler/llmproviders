@@ -215,16 +215,56 @@ func TestPrintProvidersAndJSON(t *testing.T) {
 	}
 }
 
+func TestPrintProvidersUsesRealServiceIDs(t *testing.T) {
+	reg := registry.New()
+	reg.Register(registry.Registration{
+		InstanceName: "claude",
+		ServiceID:    "anthropic",
+		Order:        15,
+		Detect:       func(ctx context.Context) (bool, error) { return true, nil },
+		Build: func(ctx context.Context, cfg registry.BuildConfig) (registry.Provider, error) {
+			return &testProvider{name: "claude"}, nil
+		},
+	})
+	catalog := modeldb.NewCatalog()
+	svc, err := llmproviders.NewService(llmproviders.WithRegistry(reg), llmproviders.WithCatalog(catalog))
+	if err != nil {
+		t.Fatalf("NewService() error = %v", err)
+	}
+
+	var out bytes.Buffer
+	if err := printProviders(&out, svc, false); err != nil {
+		t.Fatalf("printProviders() error = %v", err)
+	}
+	text := out.String()
+	for _, want := range []string{"claude", "anthropic", "detected"} {
+		if !strings.Contains(text, want) {
+			t.Fatalf("printProviders() output missing %q:\n%s", want, text)
+		}
+	}
+
+	out.Reset()
+	if err := printProvidersJSON(&out, svc); err != nil {
+		t.Fatalf("printProvidersJSON() error = %v", err)
+	}
+	jsonText := out.String()
+	for _, want := range []string{`"instance": "claude"`, `"service": "anthropic"`} {
+		if !strings.Contains(jsonText, want) {
+			t.Fatalf("printProvidersJSON() output missing %q:\n%s", want, jsonText)
+		}
+	}
+}
+
 func TestResolveWithDetailsAndPrintResolve(t *testing.T) {
 	svc := testService(t)
 
 	result := resolveWithDetails(svc, "sonnet")
-	if result.Type != "provider_alias" || result.ProviderName != "anthropic" || result.WireModelID != "claude-sonnet-4-6" {
+	if result.Type != "provider_alias" || result.InstanceName != "anthropic" || result.WireModelID != "claude-sonnet-4-6" {
 		t.Fatalf("resolveWithDetails(sonnet) = %+v", result)
 	}
 
 	bare := resolveWithDetails(svc, "gpt-4o")
-	if bare.Type != "provider_alias" || bare.ProviderName != "openrouter" {
+	if bare.Type != "provider_alias" || bare.InstanceName != "openrouter" {
 		t.Fatalf("resolveWithDetails(gpt-4o) = %+v", bare)
 	}
 
@@ -233,7 +273,18 @@ func TestResolveWithDetailsAndPrintResolve(t *testing.T) {
 		t.Fatalf("printResolve() error = %v", err)
 	}
 	text := out.String()
-	for _, want := range []string{"Resolving: fast", "Type:       Intent alias", "Provider:   anthropic", "Resolution path:"} {
+	for _, want := range []string{"Resolving: fast", "Parsed as:    bare model", "Type:         Intent alias", "Instance:     anthropic", "Service ID:   anthropic", "Resolution path:"} {
+		if !strings.Contains(text, want) {
+			t.Fatalf("printResolve() output missing %q:\n%s", want, text)
+		}
+	}
+
+	out.Reset()
+	if err := printResolve(&out, svc, "anthropic/sonnet"); err != nil {
+		t.Fatalf("printResolve() error = %v", err)
+	}
+	text = out.String()
+	for _, want := range []string{"Parsed as:    service/model", "Prefix:       anthropic", "Instance:     anthropic", "Service ID:   anthropic"} {
 		if !strings.Contains(text, want) {
 			t.Fatalf("printResolve() output missing %q:\n%s", want, text)
 		}

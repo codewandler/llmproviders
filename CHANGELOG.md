@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.3] - 2026-04-21
+
+### Changed
+
+- `resolve` now shows parsed form, requested prefix, instance name, and service ID to make service-vs-instance routing explicit
+- `providers` now reports the real service ID for each detected instance instead of inferring it from the instance name
+
 ## [0.5.2] - 2026-04-21
 
 ### Added
