@@ -12,6 +12,7 @@ import (
 
 // Provider implements the Anthropic Messages API provider.
 type Provider struct {
+	name           string
 	cfg            Config
 	auth           Auth
 	models         Models
@@ -129,7 +130,14 @@ func New(opts ...Option) (*Provider, error) {
 	// Create the high-level unified client
 	messagesClient := client.NewMessagesClient(protocol)
 
+	// Determine provider name (default to ProviderName if not set)
+	name := o.name
+	if name == "" {
+		name = ProviderName
+	}
+
 	p := &Provider{
+		name:                   name,
 		cfg:                    cfg,
 		auth:                   auth,
 		models:                 LoadModels(),
@@ -142,9 +150,9 @@ func New(opts ...Option) (*Provider, error) {
 	return p, nil
 }
 
-// Name returns the provider name.
+// Name returns the provider instance name.
 func (p *Provider) Name() string {
-	return ProviderName
+	return p.name
 }
 
 // Models returns the available models.

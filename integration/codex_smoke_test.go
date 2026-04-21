@@ -13,6 +13,8 @@ import (
 // TestCodexBasicStream verifies basic streaming with the Codex provider.
 // This test requires valid ~/.codex/auth.json (created by `codex login`).
 func TestCodexBasicStream(t *testing.T) {
+	requireIntegration(t)
+	requireIntegration(t)
 	if !codex.LocalAvailable() {
 		t.Skip("Codex auth not available (run 'codex login' to authenticate)")
 	}
@@ -68,6 +70,8 @@ func TestCodexBasicStream(t *testing.T) {
 
 // TestCodexModelResolution verifies model alias resolution.
 func TestCodexModelResolution(t *testing.T) {
+	requireIntegration(t)
+	requireIntegration(t)
 	if !codex.LocalAvailable() {
 		t.Skip("Codex auth not available (run 'codex login' to authenticate)")
 	}
@@ -121,6 +125,8 @@ func TestCodexModelResolution(t *testing.T) {
 
 // TestCodexToolUse verifies tool calling with the Codex provider.
 func TestCodexToolUse(t *testing.T) {
+	requireIntegration(t)
+	requireIntegration(t)
 	if !codex.LocalAvailable() {
 		t.Skip("Codex auth not available (run 'codex login' to authenticate)")
 	}
@@ -225,6 +231,8 @@ func TestCodexToolUse(t *testing.T) {
 
 // TestCodexMultiTurn verifies multi-turn conversation works correctly.
 func TestCodexMultiTurn(t *testing.T) {
+	requireIntegration(t)
+	requireIntegration(t)
 	if !codex.LocalAvailable() {
 		t.Skip("Codex auth not available (run 'codex login' to authenticate)")
 	}

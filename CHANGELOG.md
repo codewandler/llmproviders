@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.2] - 2026-04-21
+
+### Added
+
+- Testing strategy documentation in `docs/testing-strategy.md`
+- Unit tests for previously uncovered packages and paths:
+  - `cli/cli_test.go`
+  - `providers/dockermr/probe_test.go`
+  - `providers/ollama/probe_test.go`
+  - `providers/openai/codex/auth_test.go`
+  - `providers/openai/codex/provider_test.go`
+  - `registry/auto/auto_test.go`
+  - `integration/helpers_test.go`
+
+### Changed
+
+- Expanded `service_test.go` coverage for model resolution, parsing, and priority behavior
+- Updated `docs/review-20260421-115912.md` to reflect completed testing improvements, current validation status, and remaining gaps
+
+### Fixed
+
+- Default test workflow now aligns with deterministic execution expectations by keeping live integration coverage opt-in via environment gating
+- CLI tests were updated to match current provider and catalog APIs
+
 ## [0.5.1] - 2026-04-21
 
 ### Fixed

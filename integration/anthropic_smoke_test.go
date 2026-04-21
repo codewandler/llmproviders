@@ -14,6 +14,8 @@ import (
 // TestAnthropicToolUse verifies end-to-end tool calling with the Anthropic provider.
 // This test requires ANTHROPIC_API_KEY to be set.
 func TestAnthropicToolUse(t *testing.T) {
+	requireIntegration(t)
+	requireIntegration(t)
 	apiKey := anthropic.EnvAPIKeyValue()
 	if apiKey == "" {
 		t.Skip(anthropic.EnvAPIKey + " not set")
@@ -137,6 +139,8 @@ func TestAnthropicToolUse(t *testing.T) {
 
 // TestAnthropicBasicStream verifies basic streaming without tools.
 func TestAnthropicBasicStream(t *testing.T) {
+	requireIntegration(t)
+	requireIntegration(t)
 	apiKey := anthropic.EnvAPIKeyValue()
 	if apiKey == "" {
 		t.Skip(anthropic.EnvAPIKey + " not set")
@@ -194,6 +198,8 @@ func TestAnthropicBasicStream(t *testing.T) {
 
 // TestAnthropicModelResolution verifies model alias resolution.
 func TestAnthropicModelResolution(t *testing.T) {
+	requireIntegration(t)
+	requireIntegration(t)
 	apiKey := anthropic.EnvAPIKeyValue()
 	if apiKey == "" {
 		t.Skip(anthropic.EnvAPIKey + " not set")
@@ -251,6 +257,8 @@ func truncate(s string, maxLen int) string {
 // in multi-turn conversations. This test specifically validates the thinking signature fix
 // that ensures thinking blocks are properly captured with their signatures for replay.
 func TestAnthropicThinkingToolUse(t *testing.T) {
+	requireIntegration(t)
+	requireIntegration(t)
 	apiKey := anthropic.EnvAPIKeyValue()
 	if apiKey == "" {
 		t.Skip(anthropic.EnvAPIKey + " not set")

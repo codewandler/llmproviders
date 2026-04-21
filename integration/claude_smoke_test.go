@@ -13,6 +13,8 @@ import (
 // TestClaudeOAuthBasicStream verifies Claude OAuth authentication works.
 // This test requires ~/.claude/.credentials.json to exist (Claude CLI credentials).
 func TestClaudeOAuthBasicStream(t *testing.T) {
+	requireIntegration(t)
+	requireIntegration(t)
 	if !anthropic.LocalTokenStoreAvailable() {
 		t.Skip("Claude OAuth credentials not available (~/.claude/.credentials.json)")
 	}
@@ -69,6 +71,8 @@ func TestClaudeOAuthBasicStream(t *testing.T) {
 
 // TestClaudeOAuthThinking verifies thinking mode works with Claude OAuth.
 func TestClaudeOAuthThinking(t *testing.T) {
+	requireIntegration(t)
+	requireIntegration(t)
 	if !anthropic.LocalTokenStoreAvailable() {
 		t.Skip("Claude OAuth credentials not available (~/.claude/.credentials.json)")
 	}

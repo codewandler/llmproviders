@@ -24,12 +24,13 @@ func NewWithOAuth(opts ...Option) (*Provider, error) {
 // NewWithOAuthAndClaudeHeaders creates a new Anthropic provider with local OAuth
 // and Claude CLI compatibility headers enabled.
 // This is a convenience function for Claude CLI-style OAuth usage.
+// The provider name is set to "claude" to distinguish it from API-key providers.
 //
 // Example:
 //
 //	p, err := anthropic.NewWithOAuthAndClaudeHeaders()
 func NewWithOAuthAndClaudeHeaders(opts ...Option) (*Provider, error) {
-	return New(append([]Option{WithLocalOAuth(), WithClaudeHeaders(true)}, opts...)...)
+	return New(append([]Option{WithLocalOAuth(), WithClaudeHeaders(true), WithName("claude")}, opts...)...)
 }
 
 // MustNew creates a new Anthropic provider, panicking on error.

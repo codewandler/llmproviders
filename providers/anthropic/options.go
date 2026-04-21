@@ -19,6 +19,9 @@ type RateLimitCallback func(RateLimits)
 
 // providerOptions holds all provider configuration.
 type providerOptions struct {
+	// Identity
+	name string
+
 	// Config
 	baseURL    string
 	model      string
@@ -39,6 +42,16 @@ func defaultOptions() *providerOptions {
 		baseURL:            DefaultBaseURL,
 		model:              DefaultModel,
 		autoSystemCacheTTL: "1h",
+	}
+}
+
+// --- Identity options ---
+
+// WithName sets the provider instance name.
+// If not set, defaults to ProviderName ("anthropic").
+func WithName(name string) Option {
+	return func(o *providerOptions) {
+		o.name = name
 	}
 }
 

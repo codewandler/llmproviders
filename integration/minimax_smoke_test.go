@@ -13,6 +13,8 @@ import (
 // TestMiniMaxBasicStream verifies basic streaming with the MiniMax provider.
 // This test requires MINIMAX_API_KEY to be set.
 func TestMiniMaxBasicStream(t *testing.T) {
+	requireIntegration(t)
+	requireIntegration(t)
 	apiKey := minimax.EnvAPIKeyValue()
 	if apiKey == "" {
 		t.Skip(minimax.EnvAPIKey + " not set")
@@ -69,6 +71,8 @@ func TestMiniMaxBasicStream(t *testing.T) {
 
 // TestMiniMaxModelResolution verifies model alias resolution.
 func TestMiniMaxModelResolution(t *testing.T) {
+	requireIntegration(t)
+	requireIntegration(t)
 	apiKey := minimax.EnvAPIKeyValue()
 	if apiKey == "" {
 		t.Skip(minimax.EnvAPIKey + " not set")
@@ -124,6 +128,8 @@ func TestMiniMaxModelResolution(t *testing.T) {
 
 // TestMiniMaxToolUse verifies tool calling with the MiniMax provider.
 func TestMiniMaxToolUse(t *testing.T) {
+	requireIntegration(t)
+	requireIntegration(t)
 	apiKey := minimax.EnvAPIKeyValue()
 	if apiKey == "" {
 		t.Skip(minimax.EnvAPIKey + " not set")
@@ -229,6 +235,8 @@ func TestMiniMaxToolUse(t *testing.T) {
 
 // TestMiniMaxMultiTurn verifies multi-turn conversation works correctly.
 func TestMiniMaxMultiTurn(t *testing.T) {
+	requireIntegration(t)
+	requireIntegration(t)
 	apiKey := minimax.EnvAPIKeyValue()
 	if apiKey == "" {
 		t.Skip(minimax.EnvAPIKey + " not set")

@@ -2,7 +2,6 @@ package integration
 
 import (
 	"context"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -13,20 +12,12 @@ import (
 	"github.com/codewandler/llmproviders/providers/ollama"
 )
 
-// skipUnlessLocalIntegration skips the test unless TEST_INTEGRATION_LOCAL is set.
-// This allows running local provider tests only when the local services are available.
-func skipUnlessLocalIntegration(t *testing.T) {
-	if os.Getenv("TEST_INTEGRATION_LOCAL") == "" {
-		t.Skip("TEST_INTEGRATION_LOCAL not set, skipping local provider tests")
-	}
-}
-
 // =============================================================================
 // Ollama Tests
 // =============================================================================
 
 func TestOllamaBasicStream(t *testing.T) {
-	skipUnlessLocalIntegration(t)
+	requireLocalIntegration(t)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
@@ -75,7 +66,7 @@ func TestOllamaBasicStream(t *testing.T) {
 }
 
 func TestOllamaFetchModels(t *testing.T) {
-	skipUnlessLocalIntegration(t)
+	requireLocalIntegration(t)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -97,7 +88,7 @@ func TestOllamaFetchModels(t *testing.T) {
 }
 
 func TestOllamaMultiTurn(t *testing.T) {
-	skipUnlessLocalIntegration(t)
+	requireLocalIntegration(t)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
 	defer cancel()
@@ -156,7 +147,7 @@ func TestOllamaMultiTurn(t *testing.T) {
 // =============================================================================
 
 func TestDockerMRBasicStream(t *testing.T) {
-	skipUnlessLocalIntegration(t)
+	requireLocalIntegration(t)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
@@ -205,7 +196,7 @@ func TestDockerMRBasicStream(t *testing.T) {
 }
 
 func TestDockerMRFetchModels(t *testing.T) {
-	skipUnlessLocalIntegration(t)
+	requireLocalIntegration(t)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -227,7 +218,7 @@ func TestDockerMRFetchModels(t *testing.T) {
 }
 
 func TestDockerMRMultiTurn(t *testing.T) {
-	skipUnlessLocalIntegration(t)
+	requireLocalIntegration(t)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
 	defer cancel()

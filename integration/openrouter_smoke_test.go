@@ -13,6 +13,8 @@ import (
 // TestOpenRouterBasicStream verifies basic streaming with the OpenRouter provider.
 // This test requires OPENROUTER_API_KEY to be set.
 func TestOpenRouterBasicStream(t *testing.T) {
+	requireIntegration(t)
+	requireIntegration(t)
 	apiKey := openrouter.EnvAPIKeyValue()
 	if apiKey == "" {
 		t.Skip(openrouter.EnvAPIKey + " not set")
@@ -69,6 +71,8 @@ func TestOpenRouterBasicStream(t *testing.T) {
 
 // TestOpenRouterToolUse verifies tool calling with the OpenRouter provider.
 func TestOpenRouterToolUse(t *testing.T) {
+	requireIntegration(t)
+	requireIntegration(t)
 	apiKey := openrouter.EnvAPIKeyValue()
 	if apiKey == "" {
 		t.Skip(openrouter.EnvAPIKey + " not set")
@@ -175,6 +179,8 @@ func TestOpenRouterToolUse(t *testing.T) {
 // TestOpenRouterAnthropicModel tests using an Anthropic model through OpenRouter.
 // This routes through the Messages API.
 func TestOpenRouterAnthropicModel(t *testing.T) {
+	requireIntegration(t)
+	requireIntegration(t)
 	apiKey := openrouter.EnvAPIKeyValue()
 	if apiKey == "" {
 		t.Skip(openrouter.EnvAPIKey + " not set")
@@ -226,6 +232,8 @@ func TestOpenRouterAnthropicModel(t *testing.T) {
 
 // TestOpenRouterMultiTurn verifies multi-turn conversation works correctly.
 func TestOpenRouterMultiTurn(t *testing.T) {
+	requireIntegration(t)
+	requireIntegration(t)
 	apiKey := openrouter.EnvAPIKeyValue()
 	if apiKey == "" {
 		t.Skip(openrouter.EnvAPIKey + " not set")

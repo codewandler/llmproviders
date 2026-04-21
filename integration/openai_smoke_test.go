@@ -13,6 +13,8 @@ import (
 // TestOpenAIBasicStream verifies basic streaming with the OpenAI provider.
 // This test requires OPENAI_API_KEY or OPENAI_KEY to be set.
 func TestOpenAIBasicStream(t *testing.T) {
+	requireIntegration(t)
+	requireIntegration(t)
 	apiKey := openai.EnvAPIKeyValue()
 	if apiKey == "" {
 		t.Skip("OPENAI_API_KEY or OPENAI_KEY not set")
@@ -69,6 +71,8 @@ func TestOpenAIBasicStream(t *testing.T) {
 
 // TestOpenAIModelResolution verifies model alias resolution.
 func TestOpenAIModelResolution(t *testing.T) {
+	requireIntegration(t)
+	requireIntegration(t)
 	apiKey := openai.EnvAPIKeyValue()
 	if apiKey == "" {
 		t.Skip("OPENAI_API_KEY or OPENAI_KEY not set")
@@ -124,6 +128,8 @@ func TestOpenAIModelResolution(t *testing.T) {
 
 // TestOpenAIToolUse verifies tool calling with the OpenAI provider.
 func TestOpenAIToolUse(t *testing.T) {
+	requireIntegration(t)
+	requireIntegration(t)
 	apiKey := openai.EnvAPIKeyValue()
 	if apiKey == "" {
 		t.Skip("OPENAI_API_KEY or OPENAI_KEY not set")
@@ -229,6 +235,8 @@ func TestOpenAIToolUse(t *testing.T) {
 
 // TestOpenAIMultiTurn verifies multi-turn conversation works correctly.
 func TestOpenAIMultiTurn(t *testing.T) {
+	requireIntegration(t)
+	requireIntegration(t)
 	apiKey := openai.EnvAPIKeyValue()
 	if apiKey == "" {
 		t.Skip("OPENAI_API_KEY or OPENAI_KEY not set")

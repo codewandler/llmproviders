@@ -320,8 +320,11 @@ func (s *Service) parseModelRef(model string) parsedModelRef {
 	default:
 		// 3+ parts: could be instance/service/model or just a complex wire model
 		// Check if first part is known
-		if _, ok := s.instances[parts[0]]; ok {
-			if _, ok := s.serviceProviders[parts[1]]; ok {
+		if inst, ok := s.instances[parts[0]]; ok {
+			// Only use instance/service/model format if the instance's service matches.
+			// Otherwise, treat the rest as wire model (e.g., OpenRouter uses
+			// "openai/gpt-5" style wire model IDs).
+			if _, ok := s.serviceProviders[parts[1]]; ok && inst.ServiceID == parts[1] {
 				return parsedModelRef{
 					InstanceName: parts[0],
 					ServiceID:    parts[1],
@@ -435,6 +438,16 @@ func (s *Service) resolveByInstance(ref parsedModelRef) (registry.Provider, stri
 			ErrProviderNotFound, ref.InstanceName, inst.ServiceID, ref.ServiceID)
 	}
 
+	// Check if WireModel is an intent alias for this instance (fast, default, powerful)
+	if wireModel, ok := inst.IntentAliases[ref.WireModel]; ok {
+		return inst.Provider, wireModel, nil
+	}
+
+	// Check if WireModel is a provider alias for this instance (sonnet, opus, etc.)
+	if wireModel, ok := inst.Aliases[ref.WireModel]; ok {
+		return inst.Provider, wireModel, nil
+	}
+
 	return inst.Provider, ref.WireModel, nil
 }
 
@@ -445,6 +458,18 @@ func (s *Service) resolveByServiceID(ref parsedModelRef) (registry.Provider, str
 		return nil, "", fmt.Errorf("%w: service %q not configured", ErrProviderNotFound, ref.ServiceID)
 	}
 
+	inst := s.instances[instances[0]]
+
+	// Check if WireModel is an intent alias for this service's instance (fast, default, powerful)
+	if wireModel, ok := inst.IntentAliases[ref.WireModel]; ok {
+		return inst.Provider, wireModel, nil
+	}
+
+	// Check if WireModel is a provider alias for this service's instance (sonnet, opus, etc.)
+	if wireModel, ok := inst.Aliases[ref.WireModel]; ok {
+		return inst.Provider, wireModel, nil
+	}
+
 	// Validate model exists in catalog
 	if !s.modelExistsForService(ref.ServiceID, ref.WireModel) {
 		// Try to find a matching alias
@@ -452,7 +477,7 @@ func (s *Service) resolveByServiceID(ref parsedModelRef) (registry.Provider, str
 		for _, offering := range offerings {
 			for _, alias := range offering.Aliases {
 				if alias == ref.WireModel {
-					return s.instances[instances[0]].Provider, offering.WireModelID, nil
+					return inst.Provider, offering.WireModelID, nil
 				}
 			}
 		}
@@ -460,7 +485,6 @@ func (s *Service) resolveByServiceID(ref parsedModelRef) (registry.Provider, str
 			ErrModelNotFound, ref.WireModel, ref.ServiceID)
 	}
 
-	inst := s.instances[instances[0]]
 	return inst.Provider, ref.WireModel, nil
 }
 
