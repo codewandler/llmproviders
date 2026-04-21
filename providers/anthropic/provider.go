@@ -234,12 +234,15 @@ func augmentClaudeRequest(req *messagesapi.Request, userID string, autoSystemCac
 		&messagesapi.TextBlock{Type: messagesapi.BlockTypeText, Text: claudeSystemCore},
 	}, req.System...)
 
-	if autoSystemCacheControl && len(req.System) > 1 && req.System[1] != nil && req.System[1].CacheControl == nil {
-		ttl := autoSystemCacheTTL
-		if ttl == "" {
-			ttl = "1h"
+	if autoSystemCacheControl && len(req.System) > 0 {
+		last := req.System[len(req.System)-1]
+		if last != nil && last.CacheControl == nil {
+			ttl := autoSystemCacheTTL
+			if ttl == "" {
+				ttl = "1h"
+			}
+			last.CacheControl = &messagesapi.CacheControl{Type: "ephemeral", TTL: ttl}
 		}
-		req.System[1].CacheControl = &messagesapi.CacheControl{Type: "ephemeral", TTL: ttl}
 	}
 
 	if userID != "" {

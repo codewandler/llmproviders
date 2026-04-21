@@ -28,6 +28,6 @@ var Register = registry.Registration{
 		return EnvAPIKeyValue() != "", nil
 	},
 	Build: func(ctx context.Context, cfg registry.BuildConfig) (registry.Provider, error) {
-		return New()
+		return New(WithAutoSystemCacheControl(""))
 	},
 }
