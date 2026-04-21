@@ -8,7 +8,8 @@ import (
 )
 
 // Registration priority order.
-const OrderPriority = 40
+// OpenAI API key provider has lower priority than codex (30 > 10).
+const OrderPriority = 30
 
 // IntentAliases maps intent aliases to wire model IDs for this provider.
 var IntentAliases = map[string]string{

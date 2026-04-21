@@ -19,7 +19,13 @@
 // Pull a model before use:
 //
 //	docker model pull ai/smollm2
+//
+// # Environment Variables
+//
+// Set DOCKER_MODEL_RUNNER_URL to override the default base URL.
 package dockermr
+
+import "os"
 
 // Provider name constant.
 const (
@@ -29,6 +35,26 @@ const (
 	// ServiceID is the modeldb service identifier for this provider.
 	ServiceID = "dockermr"
 )
+
+// Environment variable names.
+const (
+	// EnvDockerMRURL overrides the default Docker Model Runner API base URL.
+	EnvDockerMRURL = "DOCKER_MODEL_RUNNER_URL"
+)
+
+// EnvDockerMRURLValue returns the value of DOCKER_MODEL_RUNNER_URL environment variable.
+func EnvDockerMRURLValue() string {
+	return os.Getenv(EnvDockerMRURL)
+}
+
+// ResolveBaseURL returns the Docker Model Runner API base URL.
+// Uses DOCKER_MODEL_RUNNER_URL env var if set, otherwise returns DefaultBaseURL.
+func ResolveBaseURL() string {
+	if url := EnvDockerMRURLValue(); url != "" {
+		return url
+	}
+	return DefaultBaseURL
+}
 
 // Default configuration values.
 const (

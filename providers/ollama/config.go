@@ -19,7 +19,13 @@
 // Pull a model before use:
 //
 //	ollama pull qwen2.5:0.5b
+//
+// # Environment Variables
+//
+// Set OLLAMA_URL to override the default base URL.
 package ollama
+
+import "os"
 
 // Provider name constant.
 const (
@@ -29,6 +35,26 @@ const (
 	// ServiceID is the modeldb service identifier for this provider.
 	ServiceID = "ollama"
 )
+
+// Environment variable names.
+const (
+	// EnvOllamaURL overrides the default Ollama API base URL.
+	EnvOllamaURL = "OLLAMA_URL"
+)
+
+// EnvOllamaURLValue returns the value of OLLAMA_URL environment variable.
+func EnvOllamaURLValue() string {
+	return os.Getenv(EnvOllamaURL)
+}
+
+// ResolveBaseURL returns the Ollama API base URL.
+// Uses OLLAMA_URL env var if set, otherwise returns DefaultBaseURL.
+func ResolveBaseURL() string {
+	if url := EnvOllamaURLValue(); url != "" {
+		return url
+	}
+	return DefaultBaseURL
+}
 
 // Default configuration values.
 const (

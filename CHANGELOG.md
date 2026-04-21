@@ -5,6 +5,65 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-04-21
+
+### Added
+
+- **`infer` command** for LLM inference
+  - Stream responses to stdout with real-time output
+  - `--model` flag with intent/alias/model support
+  - `--system` for system prompts
+  - `--thinking` mode (auto, on, off)
+  - `--effort` level (low, medium, high, max)
+  - `--temperature` and `--max-tokens` controls
+  - `--verbose` for resolution details and usage stats
+
+- **`claude` provider** (`providers/anthropic/claude_registration.go`)
+  - Uses Claude CLI OAuth credentials from `~/.claude/.credentials.json`
+  - Detected via `LocalTokenStoreAvailable()`
+  - Priority 15 (higher than anthropic API key)
+
+- **`skill` command** for AI assistant integration
+  - `llmcli skill show` - print skill content
+  - `llmcli skill install` - install to `~/.claude/skills/llmcli/`
+  - Embedded SKILL.md with llmcli usage instructions
+
+- **Shell completions** for all commands
+  - Model completions (intents, aliases, service models)
+  - Service completions for `--service` flag
+  - Thinking mode completions (auto, on, off)
+  - Effort level completions (low, medium, high, max)
+
+- **`NewLLMCommand()` factory** (`cli/llm.go`)
+  - Reusable CLI builder for embedding in other tools
+  - Accepts `Use` parameter for flexible command naming
+  - Used by `llmcli` and importable by other CLIs
+
+- **URL probing for local providers**
+  - Ollama: probes actual URL with 500ms timeout
+  - Docker Model Runner: probes actual URL with 500ms timeout
+  - Environment variables: `OLLAMA_URL`, `DOCKER_MODEL_RUNNER_URL`
+
+### Changed
+
+- **Provider priorities reordered**
+  - codex: 80 → 10 (highest priority)
+  - claude: 15 (new)
+  - anthropic: 20 (unchanged)
+  - openai: 40 → 30
+  - openrouter: 50 (unchanged)
+  - minimax: 60 (unchanged)
+  - ollama: 70 (unchanged)
+  - dockermr: 90 (unchanged)
+
+- **MiniMax no longer registers `fast` intent**
+  - Highspeed tier is premium, not cheap
+  - Removes misleading cost association
+
+- **Local provider detection improved**
+  - Previously always returned true
+  - Now probes actual URLs to verify availability
+
 ## [0.4.0] - 2026-04-21
 
 ### Added
@@ -150,6 +209,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Environment variable constants exported by each provider
 - Built on [agentapis](https://github.com/codewandler/agentapis) for protocol adapters
 
+[0.5.0]: https://github.com/codewandler/llmproviders/releases/tag/v0.5.0
 [0.4.0]: https://github.com/codewandler/llmproviders/releases/tag/v0.4.0
 [0.3.0]: https://github.com/codewandler/llmproviders/releases/tag/v0.3.0
 [0.2.0]: https://github.com/codewandler/llmproviders/releases/tag/v0.2.0

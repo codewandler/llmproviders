@@ -63,5 +63,8 @@ Examples:
 	cmd.SetOut(ioCfg.Out)
 	cmd.SetErr(ioCfg.Err)
 
+	// Register service flag completion
+	_ = cmd.RegisterFlagCompletionFunc("service", completeCatalogServices(loadCatalog))
+
 	return cmd
 }

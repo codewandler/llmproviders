@@ -11,8 +11,9 @@ import (
 const OrderPriority = 60
 
 // IntentAliases maps intent aliases to wire model IDs for this provider.
+// Note: IntentFast is intentionally omitted because MiniMax's "highspeed" model
+// is a premium tier (fast but not cheap), which doesn't fit the "fast" intent semantics.
 var IntentAliases = map[string]string{
-	llmproviders.IntentFast:     ModelM27Highspeed,
 	llmproviders.IntentDefault:  ModelM27,
 	llmproviders.IntentPowerful: ModelM27,
 }

@@ -56,6 +56,9 @@ Examples:
 	cmd.SetErr(ioCfg.Err)
 	cmd.Flags().BoolVar(&jsonOut, "json", false, "Output as JSON")
 
+	// Register positional argument completion
+	cmd.ValidArgsFunction = completeModelRefs(opts.LoadService)
+
 	return cmd
 }
 

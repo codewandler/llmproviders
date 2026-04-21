@@ -10,15 +10,15 @@ import (
 const OrderPriority = 90
 
 // Register is the registration for the Docker Model Runner provider.
-// Docker Model Runner is always detected as available since it's a local provider
-// (connection errors happen at runtime, not detection time).
+// Detection probes the Docker Model Runner API to check if it's running.
+// Set DOCKER_MODEL_RUNNER_URL to override the default base URL (localhost:12434).
 var Register = registry.Registration{
 	InstanceName: ProviderName,
 	ServiceID:    ServiceID,
 	Order:        OrderPriority,
 	// No aliases or intent aliases - DockerMR models are dynamic
 	Detect: func(ctx context.Context) (bool, error) {
-		return true, nil // Always available - errors happen at runtime
+		return ProbeAvailable(ctx), nil
 	},
 	Build: func(ctx context.Context, cfg registry.BuildConfig) (registry.Provider, error) {
 		return New()

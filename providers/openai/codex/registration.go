@@ -8,7 +8,8 @@ import (
 )
 
 // Registration priority order.
-const OrderPriority = 80
+// Codex has highest priority (10) among OpenAI-style providers.
+const OrderPriority = 10
 
 // IntentAliases maps intent aliases to wire model IDs for this provider.
 var IntentAliases = map[string]string{
